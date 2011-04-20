@@ -1,0 +1,36 @@
+h1. inspect.lua
+
+This function transform any Lua table into a human-readable representation of that table.
+
+The objective here is human understanding (i.e. for debugging), not serialization or compactness.
+
+h1. Examples of use
+
+
+h1. Gotchas / Warnings
+
+
+h1. Installation
+
+Just copy the inspect.lua file somewhere in your projects (maybe inside a /lib/ folder) and require it accordingly.
+
+Remember to store the value returned by require somewhere! (I suggest a local variable named inspect, altough others might like table.inspect)
+
+<pre>
+local inspect = require 'inspect'
+      -- or --
+table.inspect = require 'inspect'
+</pre>
+
+Also, make sure to read the license file; the text of that license file must appear somewhere in your projects' files.
+
+h1. Specs
+
+This project uses "telescope":https://github.com/norman/telescope for its specs. If you want to run the specs, you will have to install telescope first. Then just enter the spec folder and execute run.lua:
+
+<pre>
+cd path/to/inspect.lua/specs
+lua run.lua
+</pre>
+
+
