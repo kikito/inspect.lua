@@ -8,6 +8,13 @@ context( 'inspect', function()
     assert_equal(inspect(-3.14), "-3.14")
   end)
 
+  test('Should work with strings', function()
+    assert_equal(inspect("hello"), '"hello"')
+    assert_equal(inspect('I have "quotes"'), "'I have \"quotes\"'")
+    assert_equal(inspect("I have \"quotes\" and 'apostrophes'"), '"I have \\"quotes\\" and \'apostrophes\'"')
+    assert_equal(inspect('I have \n new \n lines'), '"I have \\\\n new \\\\n lines"')
+  end)
+
   test('Should work with simple array-like tables', function()
     assert_equal(inspect({1,2,3}), "{1, 2, 3}" )
   end)

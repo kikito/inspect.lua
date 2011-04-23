@@ -7,6 +7,16 @@
 
 -- public function
 
+-- Apostrophizes the string if it has quotes, but not aphostrophes
+-- Otherwise, it returns regular a requilar quoted string
+local function smartQuote(str)
+  if string.match( string.gsub(str,"[^'\"]",""), '^"+$' ) then
+    return "'" .. str .. "'"
+  end
+  return string.format("%q", str )
+end
+
+
 local Buffer = {}
 
 function Buffer:new()
@@ -26,7 +36,10 @@ end
 
 function Buffer:addValue(v)
   local tv = type(v)
-  if tv == 'table' then
+  
+  if tv == 'string' then
+    self:add(smartQuote(string.gsub( v, "\n", "\\n" )))
+  elseif tv == 'table' then
     self:add('{')
     for i=1, #v do
       if i > 1 then self:add(', ') end
@@ -37,10 +50,6 @@ function Buffer:addValue(v)
     self:add(tostring(v))
   end
   return self
-end
-
-local function newBuffer()
-
 end
 
 local function inspect(t)
