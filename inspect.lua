@@ -39,21 +39,36 @@ local function isDictionaryKey(k, length)
   return not isArrayKey(k, length)
 end
 
-local function isDictionary(t)
-  local length = #t
-  for k,_ in pairs(t) do
-    if isDictionaryKey(k, length) then return true end
-  end
+local sortOrdersByType = {
+  ['number']   = 1, ['boolean']  = 2, ['string'] = 3, ['table'] = 4,
+  ['function'] = 5, ['userdata'] = 6, ['thread'] = 7
+}
+
+function sortKeys(a,b)
+  local ta, tb = type(a), type(b)
+  if ta ~= tb then return sortOrdersByType[ta] < sortOrdersByType[tb] end
+  if ta == 'string' or ta == 'number' then return a < b end
   return false
+end
+
+local function getDictionaryKeys(t)
+  local length = #t
+  local keys = {}
+  for k,_ in pairs(t) do
+    if isDictionaryKey(k, length) then table.insert(keys,k) end
+  end
+  table.sort(keys, sortKeys)
+  return keys
 end
 
 local Inspector = {}
 
-function Inspector:new()
-  return setmetatable( { buffer = {} }, { 
+function Inspector:new(v)
+  local inspector = setmetatable( { buffer = {} }, { 
     __index = Inspector,
     __tostring = function(instance) return table.concat(instance.buffer) end
   } )
+  return inspector:addValue(v, 0)
 end
 
 function Inspector:puts(...)
@@ -81,15 +96,16 @@ function Inspector:addTable(t, level)
     self:addValue(t[i], level + 1)
   end
 
-  for k,v in pairs(t) do
-    if isDictionaryKey(k, length) then
-      if needsComma then self:puts(',') end
-      needsComma = true
-      self:tabify(level+1):addKey(k):puts(' = '):addValue(v)
-    end
+  local dictKeys, k, v = getDictionaryKeys(t)
+
+  for i=1, #dictKeys do
+    if needsComma then self:puts(',') end
+    needsComma = true
+    k = dictKeys[i]
+    self:tabify(level+1):addKey(k, level + 1):puts(' = '):addValue(t[k], level + 1)
   end
   
-  if isDictionary(t) then self:tabify(level) end
+  if #dictKeys > 0 then self:tabify(level) end
   self:puts('}')
   return self
 end
@@ -117,7 +133,7 @@ function Inspector:addKey(k, level)
 end
 
 local function inspect(t)
-  return tostring(Inspector:new():addValue(t,0))
+  return tostring(Inspector:new(t))
 end
 
 return inspect
