@@ -147,6 +147,19 @@ context( 'inspect', function()
 
     end)
 
+    test('Should include the metatable as an extra hash attribute', function()
+      local foo = { foo = 1, __tostring = function(k) return 'foo' end }
+      local bar = setmetatable({a = 1}, foo)
+      assert_equal(inspect(bar), [[{
+  a = 1,
+  <metatable> = {
+    __tostring = <function>
+    foo = 1,
+  }
+}]])
+    end)
+
+
   end)
 
 

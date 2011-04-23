@@ -105,22 +105,28 @@ function Inspector:putTable(t)
     local comma = false
     self:puts('{')
     self:down()
-    for i=1, length do
-      comma = self:putComma(comma)
-      self:puts(' '):putValue(t[i])
-    end
+      for i=1, length do
+        comma = self:putComma(comma)
+        self:puts(' '):putValue(t[i])
+      end
 
-    local dictKeys = getDictionaryKeys(t)
+      local dictKeys = getDictionaryKeys(t)
 
-    for _,k in ipairs(dictKeys) do
-      comma = self:putComma(comma)
-      self:tabify():putKey(k):puts(' = '):putValue(t[k])
-    end
+      for _,k in ipairs(dictKeys) do
+        comma = self:putComma(comma)
+        self:tabify():putKey(k):puts(' = '):putValue(t[k])
+      end
+
+      local mt = getmetatable(t)
+      if type(mt) == 'table' then
+        comma = self:putComma(comma)
+        self:tabify():puts('<metatable> = '):putValue(mt)
+      end
     self:up()
     
-    if #dictKeys > 0 then
+    if #dictKeys > 0 then -- dictionary table. Justify closing }
       self:tabify()
-    elseif length > 0 then
+    elseif length > 0 then -- array tables have one extra space before closing }
       self:puts(' ')
     end
     self:puts('}')
