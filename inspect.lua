@@ -92,28 +92,29 @@ function Inspector:down()
   self.level = self.level + 1
 end
 
+function Inspector:putComma(comma)
+  if comma then self:puts(',') end
+  return true
+end
+
 function Inspector:putTable(t)
   if self.level >= self.depth then
     self:puts('{...}')
   else
-    local length, needsComma = #t, false
+    local length = #t
+    local comma = false
     self:puts('{')
     self:down()
     for i=1, length do
-      if needsComma then self:puts(',') end
-      needsComma = true
+      comma = self:putComma(comma)
       self:puts(' '):putValue(t[i])
     end
 
     local dictKeys = getDictionaryKeys(t)
 
     for _,k in ipairs(dictKeys) do
-      if needsComma then self:puts(',') end
-      needsComma = true
-      self:tabify()
-      self:addKey(k)
-      self:puts(' = ')
-      self:putValue(t[k])
+      comma = self:putComma(comma)
+      self:tabify():putKey(k):puts(' = '):putValue(t[k])
     end
     self:up()
     
@@ -142,7 +143,7 @@ function Inspector:putValue(v)
   return self
 end
 
-function Inspector:addKey(k)
+function Inspector:putKey(k)
   if type(k) == "string" and isIdentifier(k) then
     return self:puts(k)
   end
