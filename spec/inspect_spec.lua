@@ -47,11 +47,11 @@ context( 'inspect', function()
   context('tables', function()
 
     test('Should work with simple array-like tables', function()
-      assert_equal(inspect({1,2,3}), "{1, 2, 3}" )
+      assert_equal(inspect({1,2,3}), "{ 1, 2, 3 }" )
     end)
 
     test('Should work with nested arrays', function()
-      assert_equal(inspect({'a','b','c', {'d','e'}, 'f'}), '{"a", "b", "c", {"d", "e"}, "f"}' )
+      assert_equal(inspect({'a','b','c', {'d','e'}, 'f'}), '{ "a", "b", "c", { "d", "e" }, "f" }' )
     end)
 
     test('Should work with simple dictionary tables', function()
@@ -69,7 +69,7 @@ context( 'inspect', function()
     end)
 
     test('Should work with hybrid tables', function()
-      assert_equal(inspect({ 'a', {b = 1}, 2, c = 3, ['ahoy you'] = 4 }), [[{"a", {
+      assert_equal(inspect({ 'a', {b = 1}, 2, c = 3, ['ahoy you'] = 4 }), [[{ "a", {
     b = 1
   }, 2,
   ["ahoy you"] = 4,
@@ -77,6 +77,32 @@ context( 'inspect', function()
 }]])
     end)
 
+    test('Should respect depth', function()
+      local level4 = { 1,2,3, a = { b = { c = { d = 4 } } } }
+      assert_equal(inspect(level4, 4), [[{ 1, 2, 3,
+  a = {
+    b = {
+      c = {
+        d = 4
+      }
+    }
+  }
+}]])
+      assert_equal(inspect(level4, 3), [[{ 1, 2, 3,
+  a = {
+    b = {
+      c = {...}
+    }
+  }
+}]])
+      assert_equal(inspect(level4, 2), [[{ 1, 2, 3,
+  a = {
+    b = {...}
+  }
+}]])
+    end)
+
   end)
+
 
 end)
