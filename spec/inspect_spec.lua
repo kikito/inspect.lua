@@ -100,6 +100,12 @@ context( 'inspect', function()
     b = {...}
   }
 }]])
+
+      assert_equal(inspect(level4, 1), [[{ 1, 2, 3,
+  a = {...}
+}]])
+
+
     end)
 
   end)
