@@ -64,11 +64,11 @@ end
 local Inspector = {}
 
 function Inspector:new(v, depth)
-  local inspector = setmetatable( { buffer = {}, depth = depth }, { 
+  local inspector = setmetatable( { buffer = {}, depth = depth, level = 0 }, { 
     __index = Inspector,
     __tostring = function(instance) return table.concat(instance.buffer) end
   } )
-  return inspector:putValue(v, 0)
+  return inspector:putValue(v)
 end
 
 function Inspector:puts(...)
@@ -79,21 +79,30 @@ function Inspector:puts(...)
   return self
 end
 
-function Inspector:tabify(level)
-  self:puts("\n", string.rep("  ", level))
+function Inspector:tabify()
+  self:puts("\n", string.rep("  ", self.level))
   return self
 end
 
-function Inspector:putTable(t, level)
-  if level >= self.depth then
+function Inspector:up()
+  self.level = self.level - 1
+end
+
+function Inspector:down()
+  self.level = self.level + 1
+end
+
+function Inspector:putTable(t)
+  if self.level >= self.depth then
     self:puts('{...}')
   else
     local length, needsComma = #t, false
     self:puts('{')
+    self:down()
     for i=1, length do
       if needsComma then self:puts(',') end
       needsComma = true
-      self:puts(' '):putValue(t[i], level + 1)
+      self:puts(' '):putValue(t[i])
     end
 
     local dictKeys = getDictionaryKeys(t)
@@ -101,14 +110,15 @@ function Inspector:putTable(t, level)
     for _,k in ipairs(dictKeys) do
       if needsComma then self:puts(',') end
       needsComma = true
-      self:tabify(level+1)
-      self:addKey(k, level + 1)
+      self:tabify()
+      self:addKey(k)
       self:puts(' = ')
-      self:putValue(t[k], level + 1)
+      self:putValue(t[k])
     end
+    self:up()
     
     if #dictKeys > 0 then
-      self:tabify(level)
+      self:tabify()
     elseif length > 0 then
       self:puts(' ')
     end
@@ -117,7 +127,7 @@ function Inspector:putTable(t, level)
   return self
 end
 
-function Inspector:putValue(v, level)
+function Inspector:putValue(v)
   local tv = type(v)
 
   if tv == 'string' then
@@ -125,18 +135,18 @@ function Inspector:putValue(v, level)
   elseif tv == 'number' or tv == 'boolean' then
     self:puts(tostring(v))
   elseif tv == 'table' then
-    self:putTable(v, level)
+    self:putTable(v)
   else
     self:puts('<',tv,'>')
   end
   return self
 end
 
-function Inspector:addKey(k, level)
+function Inspector:addKey(k)
   if type(k) == "string" and isIdentifier(k) then
     return self:puts(k)
   end
-  return self:puts( "[" ):putValue(k, level):puts("]")
+  return self:puts( "[" ):putValue(k):puts("]")
 end
 
 local function inspect(t, depth)
