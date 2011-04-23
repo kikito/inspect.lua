@@ -77,34 +77,56 @@ context( 'inspect', function()
 }]])
     end)
 
-    test('Should respect depth', function()
-      local level4 = { 1,2,3, a = { b = { c = { d = 4 } } } }
-      assert_equal(inspect(level4, 4), [[{ 1, 2, 3,
+    context('depth', function()
+      local level5 = { 1,2,3, a = { b = { c = { d = { e = 5 } } } } }
+      local keys = { [level5] = true }
+
+      test('Should have a default depth of 4', function()
+        assert_equal(inspect(level5), [[{ 1, 2, 3,
   a = {
     b = {
       c = {
-        d = 4
+        d = {...}
       }
     }
   }
 }]])
-      assert_equal(inspect(level4, 3), [[{ 1, 2, 3,
-  a = {
-    b = {
-      c = {...}
-    }
-  }
-}]])
-      assert_equal(inspect(level4, 2), [[{ 1, 2, 3,
+      end)
+      test('Should be modifiable by the user', function()
+        assert_equal(inspect(level5, 2), [[{ 1, 2, 3,
   a = {
     b = {...}
   }
 }]])
-
-      assert_equal(inspect(level4, 1), [[{ 1, 2, 3,
+        assert_equal(inspect(level5, 1), [[{ 1, 2, 3,
   a = {...}
 }]])
+        assert_equal(inspect(level5, 0), "{...}")
+        assert_equal(inspect(level5, 6), [[{ 1, 2, 3,
+  a = {
+    b = {
+      c = {
+        d = {
+          e = 5
+        }
+      }
+    }
+  }
+}]])
 
+      end)
+
+      test('Should respect depth on keys', function()
+        assert_equal(inspect(keys), [[{
+  [{ 1, 2, 3,
+    a = {
+      b = {
+        c = {...}
+      }
+    }
+  }] = true
+}]])
+      end)
 
     end)
 
