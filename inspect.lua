@@ -85,24 +85,23 @@ function Inspector:tabify(level)
 end
 
 function Inspector:addTable(t, level)
+  local length, needsComma = #t, false
   self:puts('{')
-  local length = #t
-  local needsComma = false
   for i=1, length do
-    if i > 1 then
-      self:puts(', ')
-      needsComma = true
-    end
+    if needsComma then self:puts(', ') end
+    needsComma = true
     self:addValue(t[i], level + 1)
   end
 
-  local dictKeys, k, v = getDictionaryKeys(t)
+  local dictKeys = getDictionaryKeys(t)
 
-  for i=1, #dictKeys do
+  for _,k in ipairs(dictKeys) do
     if needsComma then self:puts(',') end
     needsComma = true
-    k = dictKeys[i]
-    self:tabify(level+1):addKey(k, level + 1):puts(' = '):addValue(t[k], level + 1)
+    self:tabify(level+1)
+    self:addKey(k, level + 1)
+    self:puts(' = ')
+    self:addValue(t[k], level + 1)
   end
   
   if #dictKeys > 0 then self:tabify(level) end

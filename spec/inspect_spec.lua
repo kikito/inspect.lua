@@ -46,7 +46,6 @@ context( 'inspect', function()
 
   context('tables', function()
 
-
     test('Should work with simple array-like tables', function()
       assert_equal(inspect({1,2,3}), "{1, 2, 3}" )
     end)
@@ -60,14 +59,22 @@ context( 'inspect', function()
     end)
 
     test('Should work with nested dictionary tables', function()
-      nestedDict = [[{
+      assert_equal(inspect( {d=3, b={c=2}, a=1} ), [[{
   a = 1,
   b = {
     c = 2
   },
   d = 3
-}]]
-      assert_equal(inspect( {a=1, b={c=2}, d=3} ), nestedDict)
+}]])
+    end)
+
+    test('Should work with hybrid tables', function()
+      assert_equal(inspect({ 'a', {b = 1}, 2, c = 3, ['ahoy you'] = 4 }), [[{"a", {
+    b = 1
+  }, 2,
+  ["ahoy you"] = 4,
+  c = 3
+}]])
     end)
 
   end)
