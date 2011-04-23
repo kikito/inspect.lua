@@ -58,6 +58,23 @@ context( 'inspect', function()
       assert_equal(inspect({a = 1, b = 2}), "{\n  a = 1,\n  b = 2\n}")
     end)
 
+    test('Should sort keys in dictionary tables', function()
+      local t = { 1,2,3,
+        [print] = 1, ["buy more"] = 1, a = 1, 
+        [14] = 1, [{c=2}] = 1, [true]= 1
+      }
+      assert_equal(inspect(t), [[{ 1, 2, 3,
+  [14] = 1,
+  [true] = 1,
+  a = 1,
+  ["buy more"] = 1,
+  [{
+    c = 2
+  }] = 1,
+  [<function>] = 1
+}]])
+    end)
+
     test('Should work with nested dictionary tables', function()
       assert_equal(inspect( {d=3, b={c=2}, a=1} ), [[{
   a = 1,
