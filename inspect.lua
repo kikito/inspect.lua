@@ -16,6 +16,19 @@ local function smartQuote(str)
   return string.format("%q", str )
 end
 
+local unescapedChars = {
+  ["\a"] = "\\a",  ["\b"] = "\\b", ["\f"] = "\\f",  ["\n"] = "\\n",
+  ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v",  ["\\"] = "\\\\"
+}
+
+local function unescapeChar(c)
+  return unescapedChars[c]
+end
+
+local function unescape(str)
+  return string.gsub( str, "(%c)", unescapeChar )
+end
+
 
 local Buffer = {}
 
@@ -38,7 +51,9 @@ function Buffer:addValue(v)
   local tv = type(v)
   
   if tv == 'string' then
-    self:add(smartQuote(string.gsub( v, "\n", "\\n" )))
+    self:add(smartQuote(unescape(v)))
+  elseif tv == 'number' or tv == 'boolean' then
+    self:add(tostring(v))
   elseif tv == 'table' then
     self:add('{')
     for i=1, #v do
@@ -47,8 +62,9 @@ function Buffer:addValue(v)
     end
     self:add('}')
   else
-    self:add(tostring(v))
+    self:add('<',tv,'>')
   end
+
   return self
 end
 
