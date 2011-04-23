@@ -51,7 +51,11 @@ context( 'inspect', function()
     end)
 
     test('Should work with nested arrays', function()
-      assert_equal(inspect({1,2,3, {4,5}, 6}), "{1, 2, 3, {4, 5}, 6}" )
+      assert_equal(inspect({'a','b','c', {'d','e'}, 'f'}), '{"a", "b", "c", {"d", "e"}, "f"}' )
+    end)
+
+    test('Should work with simple hash-like tables', function()
+      assert_equal(inspect({a = 1, b = 2}), "{\n  a = 1,\n  b = 2\n}")
     end)
 
   end)

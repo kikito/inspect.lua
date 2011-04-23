@@ -16,60 +16,108 @@ local function smartQuote(str)
   return string.format("%q", str )
 end
 
-local unescapedChars = {
+local controlCharsTranslation = {
   ["\a"] = "\\a",  ["\b"] = "\\b", ["\f"] = "\\f",  ["\n"] = "\\n",
   ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v",  ["\\"] = "\\\\"
 }
 
-local function unescapeChar(c)
-  return unescapedChars[c]
-end
+local function unescapeChar(c) return controlCharsTranslation[c] end
 
 local function unescape(str)
   return string.gsub( str, "(%c)", unescapeChar )
 end
 
+local function isIdentifier(str)
+  return string.match( str, "^[_%a][_%a%d]*$" )
+end
 
-local Buffer = {}
+local function isArrayKey(k, length)
+  return type(k)=='number' and 1 <= k and k <= length
+end
 
-function Buffer:new()
-  return setmetatable( { data = {} }, { 
-    __index = Buffer,
-    __tostring = function(instance) return table.concat(instance.data) end
+local function isDictionaryKey(k, length)
+  return not isArrayKey(k, length)
+end
+
+local function isDictionary(t)
+  local length = #t
+  for k,_ in pairs(t) do
+    if isDictionaryKey(k, length) then return true end
+  end
+  return false
+end
+
+local Inspector = {}
+
+function Inspector:new()
+  return setmetatable( { buffer = {} }, { 
+    __index = Inspector,
+    __tostring = function(instance) return table.concat(instance.buffer) end
   } )
 end
 
-function Buffer:add(...)
+function Inspector:puts(...)
   local args = {...}
   for i=1, #args do
-    table.insert(self.data, tostring(args[i]))
+    table.insert(self.buffer, tostring(args[i]))
   end
   return self
 end
 
-function Buffer:addValue(v)
-  local tv = type(v)
-  
-  if tv == 'string' then
-    self:add(smartQuote(unescape(v)))
-  elseif tv == 'number' or tv == 'boolean' then
-    self:add(tostring(v))
-  elseif tv == 'table' then
-    self:add('{')
-    for i=1, #v do
-      if i > 1 then self:add(', ') end
-      self:addValue(v[i])
+function Inspector:tabify(level)
+  self:puts("\n", string.rep("  ", level))
+  return self
+end
+
+function Inspector:addTable(t, level)
+  self:puts('{')
+  local length = #t
+  local needsComma = false
+  for i=1, length do
+    if i > 1 then
+      self:puts(', ')
+      needsComma = true
     end
-    self:add('}')
-  else
-    self:add('<',tv,'>')
+    self:addValue(t[i], level + 1)
   end
 
+  for k,v in pairs(t) do
+    if isDictionaryKey(k, length) then
+      if needsComma then self:puts(',') end
+      needsComma = true
+      self:tabify(level+1):addKey(k):puts(' = '):addValue(v)
+    end
+  end
+  
+  if isDictionary(t) then self:tabify(level) end
+  self:puts('}')
   return self
+end
+
+function Inspector:addValue(v, level)
+  local tv = type(v)
+
+  if tv == 'string' then
+    self:puts(smartQuote(unescape(v)))
+  elseif tv == 'number' or tv == 'boolean' then
+    self:puts(tostring(v))
+  elseif tv == 'table' then
+    self:addTable(v, level)
+  else
+    self:puts('<',tv,'>')
+  end
+  return self
+end
+
+function Inspector:addKey(k, level)
+  if type(k) == "string" and isIdentifier(k) then
+    return self:puts(k)
+  end
+  return self:puts( "[" ):addValue(k, level):puts("]")
 end
 
 local function inspect(t)
-  return tostring(Buffer:new():addValue(t))
+  return tostring(Inspector:new():addValue(t,0))
 end
 
 return inspect
