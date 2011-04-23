@@ -7,32 +7,44 @@
 
 -- public function
 
-local bufferMethods = {
-  add = function(self, ...)
-    local args = {...}
-    for i=1, #args do
-      table.insert(self.data, tostring(args[i]))
-    end
-    return self
-  end
-}
+local Buffer = {}
 
-local function newBuffer()
+function Buffer:new()
   return setmetatable( { data = {} }, { 
-    __index = bufferMethods,
-    __tostring = function(self) return table.concat(self.data) end
+    __index = Buffer,
+    __tostring = function(instance) return table.concat(instance.data) end
   } )
 end
 
-local function inspect(t)
-  local buffer = newBuffer()
-  buffer:add('{')
-  for i=1, #t do
-    if i > 1 then buffer:add(', ') end
-    buffer:add(tostring(t[i]))
+function Buffer:add(...)
+  local args = {...}
+  for i=1, #args do
+    table.insert(self.data, tostring(args[i]))
   end
-  buffer:add('}')
-  return tostring(buffer)
+  return self
+end
+
+function Buffer:addValue(v)
+  local tv = type(v)
+  if tv == 'table' then
+    self:add('{')
+    for i=1, #v do
+      if i > 1 then self:add(', ') end
+      self:addValue(v[i])
+    end
+    self:add('}')
+  else
+    self:add(tostring(v))
+  end
+  return self
+end
+
+local function newBuffer()
+
+end
+
+local function inspect(t)
+  return tostring(Buffer:new():addValue(t))
 end
 
 return inspect
