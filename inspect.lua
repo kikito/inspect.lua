@@ -24,7 +24,8 @@ local controlCharsTranslation = {
 local function unescapeChar(c) return controlCharsTranslation[c] end
 
 local function unescape(str)
-  return string.gsub( str, "(%c)", unescapeChar )
+  local result, _ = string.gsub( str, "(%c)", unescapeChar )
+  return result
 end
 
 local function isIdentifier(str)
@@ -101,10 +102,20 @@ function Inspector:putTable(t)
   if self.level >= self.depth then
     self:puts('{...}')
   else
-    local length = #t
-    local comma = false
     self:puts('{')
     self:down()
+
+      local length = #t
+      local mt = getmetatable(t)
+      local __tostring = type(mt) == 'table' and mt.__tostring
+      local string = type(__tostring) == 'function' and __tostring(t)
+
+      if type(string) == 'string' and #string > 0 then
+        self:puts(' -- ', unescape(string))
+        if length >= 1 then self:tabify() end -- tabify the array values
+      end
+
+      local comma = false
       for i=1, length do
         comma = self:putComma(comma)
         self:puts(' '):putValue(t[i])
@@ -117,14 +128,13 @@ function Inspector:putTable(t)
         self:tabify():putKey(k):puts(' = '):putValue(t[k])
       end
 
-      local mt = getmetatable(t)
-      if type(mt) == 'table' then
+      if mt then
         comma = self:putComma(comma)
         self:tabify():puts('<metatable> = '):putValue(mt)
       end
     self:up()
     
-    if #dictKeys > 0 then -- dictionary table. Justify closing }
+    if #dictKeys > 0 or mt then -- dictionary table. Justify closing }
       self:tabify()
     elseif length > 0 then -- array tables have one extra space before closing }
       self:puts(' ')

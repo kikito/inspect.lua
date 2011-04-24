@@ -147,16 +147,33 @@ context( 'inspect', function()
 
     end)
 
-    test('Should include the metatable as an extra hash attribute', function()
-      local foo = { foo = 1, __tostring = function(k) return 'foo' end }
-      local bar = setmetatable({a = 1}, foo)
-      assert_equal(inspect(bar), [[{
+    context('metatables', function()
+
+      test('Should include the metatable as an extra hash attribute', function()
+        local foo = { foo = 1, __mode = 'v' }
+        local bar = setmetatable({a = 1}, foo)
+        assert_equal(inspect(bar), [[{
   a = 1,
   <metatable> = {
-    __tostring = <function>
-    foo = 1,
+    __mode = "v",
+    foo = 1
   }
 }]])
+      end)
+      
+      test('Should include the __tostring metamethod if it exists', function()
+        local foo = { foo = 1, __tostring = function() return 'hello\nworld' end }
+        local bar = setmetatable({a = 1}, foo)
+        assert_equal(inspect(bar), [[{ -- hello\nworld
+  a = 1,
+  <metatable> = {
+    __tostring = <function>,
+    foo = 1
+  }
+}]])
+      end)
+
+
     end)
 
 
