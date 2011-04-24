@@ -5,10 +5,8 @@
 -- inspired by http://lua-users.org/wiki/TableSerialization
 -----------------------------------------------------------------------------------------------------------------------
 
--- public function
-
 -- Apostrophizes the string if it has quotes, but not aphostrophes
--- Otherwise, it returns regular a requilar quoted string
+-- Otherwise, it returns a regular quoted string
 local function smartQuote(str)
   if string.match( string.gsub(str,"[^'\"]",""), '^"+$' ) then
     return "'" .. str .. "'"
