@@ -6,9 +6,100 @@ The objective here is human understanding (i.e. for debugging), not serializatio
 
 h1. Examples of use
 
+"Array-like" tables are rendered horizontally:
+
+<pre>inspect({1,2,3,4}) == "{ 1, 2, 3, 4 }"</pre>
+
+"dictionary-like" tables are rendered with one element per line:
+
+<pre>inspect({a=1,b=2}) == [[{
+  a = 1,
+  b = 2
+}]]</pre>
+
+The keys will be sorted alphanumerically when possible.
+
+"Hybrid" tables will have the array part on the first line, and the dictionary part just below them:
+
+<pre>
+inspect({1,2,3,a=1,b=2}) == [[{ 1, 2, 3,
+  a = 1,
+  b = 2
+}]]
+</pre>
+
+Tables can be nested, and will be indented with two spaces per level.
+
+<pre>
+inspect({a={b=2}}) = [
+  a = {
+    b = 2
+  }
+}]]
+</pre>
+
+By default, @inspect@ will stop rendering at a depth of 4 levels. When that point is reached, it will just return @{...}@ :
+
+<pre>
+local t5 = {a = {b = {c = {d = {e = 5}}}}}
+inspect(t5) == [[
+  a = {
+    b = {
+      c = {
+        d = {...}
+      }
+    }
+  }
+}]]
+</pre>
+
+You can increase/decrease the max depth with the second parameter:
+
+<pre>
+inspect(t5, 2) == [[{
+  a = {
+    b = {...}
+  }
+}]])
+
+inspect(t5, 7) == [[{
+  a = {
+    b = {
+      c = {
+        d = {
+          e = 5
+        }
+      }
+    }
+  }
+}]])
+</pre>
+
+Functions, userdata and threads are simply rendered as @<function>@, @<userdata>@ and @<thread>@ respectively:
+
+<pre>
+inspect({ f = print, ud = some_user_data, thread = a_thread} ) == [[{
+  f = <function>,
+  u = <userdata>,
+  thread = <thread>
+}]])
+</pre>
+
+
+If the table has a metatable, inspect will include it at the end, in a special field called @<metatable>@:
+
+<pre>
+inspect(setmetatable({a=1}, {b=2}) == [[{
+  a = 1
+  <metatable> = {
+    b = 2
+  }
+}]])
+</pre>
 
 h1. Gotchas / Warnings
 
+This method is *not* appropiate for saving/restoring tables. It is ment to be used by the programmer mainly while debugging a program.
 
 h1. Installation
 
