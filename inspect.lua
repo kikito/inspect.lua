@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------------------------------------------------
--- inspect.lua - v1.0 (2011-04)
+-- inspect.lua - v1.1 (2011-01)
 -- Enrique García Cota - enrique.garcia.cota [AT] gmail [DOT] com
 -- human-readable representations of tables.
 -- inspired by http://lua-users.org/wiki/TableSerialization
@@ -63,7 +63,25 @@ end
 local Inspector = {}
 
 function Inspector:new(v, depth)
-  local inspector = setmetatable( { buffer = {}, depth = depth, level = 0 }, { 
+  local inspector = {
+    buffer = {},
+    depth = depth,
+    level = 0,
+    counters = {
+      ['function'] = 0,
+      ['userdata'] = 0,
+      ['thread'] = 0,
+      ['table'] = 0
+    },
+    pools = {
+      ['function'] = setmetatable({}, {__mode = "kv"}),
+      ['userdata'] = setmetatable({}, {__mode = "kv"}),
+      ['thread'] = setmetatable({}, {__mode = "kv"}),
+      ['table'] = setmetatable({}, {__mode = "kv"})
+    }
+  }
+
+  setmetatable( inspector, { 
     __index = Inspector,
     __tostring = function(instance) return table.concat(instance.buffer) end
   } )
@@ -97,10 +115,12 @@ function Inspector:putComma(comma)
 end
 
 function Inspector:putTable(t)
-  if self.level >= self.depth then
+  if self:alreadySeen(t) then
+    self:puts('<table ', self:getOrCreateCounter(t), '>')
+  elseif self.level >= self.depth then
     self:puts('{...}')
   else
-    self:puts('{')
+    self:puts('<',self:getOrCreateCounter(t),'>{')
     self:down()
 
       local length = #t
@@ -142,17 +162,33 @@ function Inspector:putTable(t)
   return self
 end
 
+function Inspector:alreadySeen(v)
+  local tv = type(v)
+  return self.pools[tv][v] ~= nil
+end
+
+function Inspector:getOrCreateCounter(v)
+  local tv = type(v)
+  local current = self.pools[tv][v]
+  if not current then
+    current = self.counters[tv] + 1
+    self.counters[tv] = current
+    self.pools[tv][v] = current
+  end
+  return current
+end
+
 function Inspector:putValue(v)
   local tv = type(v)
 
   if tv == 'string' then
     self:puts(smartQuote(unescape(v)))
-  elseif tv == 'number' or tv == 'boolean' then
+  elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
     self:puts(tostring(v))
   elseif tv == 'table' then
     self:putTable(v)
   else
-    self:puts('<',tv,'>')
+    self:puts('<',tv,' ',self:getOrCreateCounter(v),'>')
   end
   return self
 end
