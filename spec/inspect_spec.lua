@@ -186,6 +186,18 @@ context( 'inspect', function()
 }]])
       end)
 
+      test('Should not include an error string if __tostring metamethod throws an error', function()
+        local foo = { foo = 1, __tostring = function() error('hello', 0) end }
+        local bar = setmetatable({a = 1}, foo)
+        assert_equal(inspect(bar), [[<1>{ -- error: hello
+  a = 1,
+  <metatable> = <2>{
+    __tostring = <function 1>,
+    foo = 1
+  }
+}]])
+      end)
+
 
     end)
 

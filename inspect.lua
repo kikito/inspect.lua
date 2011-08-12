@@ -43,7 +43,7 @@ local sortOrdersByType = {
   ['function'] = 5, ['userdata'] = 6, ['thread'] = 7
 }
 
-function sortKeys(a,b)
+local function sortKeys(a,b)
   local ta, tb = type(a), type(b)
   if ta ~= tb then return sortOrdersByType[ta] < sortOrdersByType[tb] end
   if ta == 'string' or ta == 'number' then return a < b end
@@ -58,6 +58,16 @@ local function getDictionaryKeys(t)
   end
   table.sort(keys, sortKeys)
   return keys
+end
+
+local function getToStringResultSafely(t, mt)
+  local __tostring = type(mt) == 'table' and mt.__tostring
+  local string, status
+  if type(__tostring) == 'function' then
+    status, string = pcall(__tostring, t)
+    string = status and string or 'error: ' .. tostring(string)
+  end
+  return string
 end
 
 local Inspector = {}
@@ -125,9 +135,8 @@ function Inspector:putTable(t)
 
       local length = #t
       local mt = getmetatable(t)
-      local __tostring = type(mt) == 'table' and mt.__tostring
-      local string = type(__tostring) == 'function' and __tostring(t)
 
+      local string = getToStringResultSafely(t, mt)
       if type(string) == 'string' and #string > 0 then
         self:puts(' -- ', unescape(string))
         if length >= 1 then self:tabify() end -- tabify the array values
