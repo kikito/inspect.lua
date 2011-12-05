@@ -97,7 +97,7 @@ inspect(setmetatable({a=1}, {b=2}) == [[<1>{
 }]])
 </pre>
 
-You may have noticed that all tables are preceded by an @<id>@ string. If a table has already been printed out, @inspect@ will just print @<table id>@ the second time it finds it. This will infinite loops.
+You may have noticed that all tables are preceded by an @<id>@ string. If a table has already been printed out, @inspect@ will just print @<table id>@ the second time it finds it. This will prevent infinite loops.
 
 <pre>
 a = {1,2}
