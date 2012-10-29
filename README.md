@@ -82,30 +82,29 @@ If the table has a metatable, inspect will include it at the end, in a special f
 
 Notice that since both `a` appears more than once in the expression, it is prefixed by `<1>` and replaced by `<table 1>` every time it appears later on.
 
-h1. Gotchas / Warnings
+Gotchas / Warnings
+==================
 
 This method is *not* appropiate for saving/restoring tables. It is ment to be used by the programmer mainly while debugging a program.
 
-h1. Installation
+Installation
+============
 
 Just copy the inspect.lua file somewhere in your projects (maybe inside a /lib/ folder) and require it accordingly.
 
 Remember to store the value returned by require somewhere! (I suggest a local variable named inspect, altough others might like table.inspect)
 
-<pre>
-local inspect = require 'inspect'
-      -- or --
-table.inspect = require 'inspect'
-</pre>
+    local inspect = require 'inspect'
+          -- or --
+    table.inspect = require 'inspect'
 
 Also, make sure to read the license file; the text of that license file must appear somewhere in your projects' files.
 
-h1. Specs
+Specs
+=====
 
 This project uses "telescope":https://github.com/norman/telescope for its specs. If you want to run the specs, you will have to install telescope first. Then just execute the following from the root inspect folder:
 
-<pre>
-tsc -f spec/*
-</pre>
+    tsc -f spec/*
 
 
