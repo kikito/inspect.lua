@@ -96,12 +96,14 @@ context( 'inspect', function()
       local level5 = { 1,2,3, a = { b = { c = { d = { e = 5 } } } } }
       local keys = { [level5] = true }
 
-      it('has a default depth of 4', function()
+      it('has infinite depth by default', function()
         assert_equal(inspect(level5), [[{ 1, 2, 3,
   a = {
     b = {
       c = {
-        d = {...}
+        d = {
+          e = 5
+        }
       }
     }
   }
@@ -117,13 +119,11 @@ context( 'inspect', function()
   a = {...}
 }]])
         assert_equal(inspect(level5, 0), "{...}")
-        assert_equal(inspect(level5, 6), [[{ 1, 2, 3,
+        assert_equal(inspect(level5, 4), [[{ 1, 2, 3,
   a = {
     b = {
       c = {
-        d = {
-          e = 5
-        }
+        d = {...}
       }
     }
   }
@@ -132,7 +132,7 @@ context( 'inspect', function()
       end)
 
       it('respects depth on keys', function()
-        assert_equal(inspect(keys), [[{
+        assert_equal(inspect(keys, 4), [[{
   [{ 1, 2, 3,
     a = {
       b = {

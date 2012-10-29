@@ -148,7 +148,7 @@ end
 function Inspector:putTable(t)
   if self:alreadyVisited(t) then
     self:puts('<table ', self:getId(t), '>')
-  elseif self.level >= self.depth then
+  elseif self.depth and self.level >= self.depth then
     self:puts('{...}')
   else
     if self.tableAppearances[t] > 1 then
@@ -232,7 +232,6 @@ function Inspector:putKey(k)
 end
 
 local function inspect(t, depth)
-  depth = depth or 4
   return tostring(Inspector:new(t, depth))
 end
 
