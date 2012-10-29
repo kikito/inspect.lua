@@ -72,30 +72,49 @@ end
 
 local Inspector = {}
 
-function Inspector:new(v, depth)
+function Inspector:new(t, depth)
   local inspector = {
     buffer = {},
     depth = depth,
     level = 0,
-    counters = {
+    maxIds = {
       ['function'] = 0,
       ['userdata'] = 0,
-      ['thread'] = 0,
-      ['table'] = 0
+      ['thread']   = 0,
+      ['table']    = 0
     },
-    pools = {
+    ids = {
       ['function'] = setmetatable({}, {__mode = "kv"}),
       ['userdata'] = setmetatable({}, {__mode = "kv"}),
-      ['thread'] = setmetatable({}, {__mode = "kv"}),
-      ['table'] = setmetatable({}, {__mode = "kv"})
-    }
+      ['thread']   = setmetatable({}, {__mode = "kv"}),
+      ['table']    = setmetatable({}, {__mode = "kv"})
+    },
+    tableAppearances = setmetatable({}, {__mode = "k"})
   }
 
   setmetatable( inspector, {
     __index = Inspector,
     __tostring = function(instance) return table.concat(instance.buffer) end
   } )
-  return inspector:putValue(v)
+
+  inspector:countTableAppearances(t)
+
+  return inspector:putValue(t)
+end
+
+function Inspector:countTableAppearances(t)
+  if type(t) == 'table' then
+    if not self.tableAppearances[t] then
+      self.tableAppearances[t] = 1
+      for k,v in pairs(t) do
+        self:countTableAppearances(k)
+        self:countTableAppearances(v)
+      end
+    else
+      self.tableAppearances[t] = self.tableAppearances[t] + 1
+    end
+    self:countTableAppearances(getmetatable(t))
+  end
 end
 
 function Inspector:tabify()
@@ -127,12 +146,15 @@ function Inspector:commaControl(comma)
 end
 
 function Inspector:putTable(t)
-  if self:alreadySeen(t) then
-    self:puts('<table ', self:getCounter(t), '>')
+  if self:alreadyVisited(t) then
+    self:puts('<table ', self:getId(t), '>')
   elseif self.level >= self.depth then
     self:puts('{...}')
   else
-    self:puts('<',self:getCounter(t),'>{')
+    if self.tableAppearances[t] > 1 then
+      self:puts('<',self:getId(t),'>')
+    end
+    self:puts('{')
     self:down()
 
       local length = #t
@@ -161,6 +183,7 @@ function Inspector:putTable(t)
         comma = self:commaControl(comma)
         self:tabify():puts('<metatable> = '):putValue(mt)
       end
+
     self:up()
 
     if #dictKeys > 0 or mt then -- dictionary table. Justify closing }
@@ -173,19 +196,19 @@ function Inspector:putTable(t)
   return self
 end
 
-function Inspector:alreadySeen(v)
-  return self.pools[type(v)][v] ~= nil
+function Inspector:alreadyVisited(v)
+  return self.ids[type(v)][v] ~= nil
 end
 
-function Inspector:getCounter(v)
+function Inspector:getId(v)
   local tv = type(v)
-  local current = self.pools[tv][v]
-  if not current then
-    current = self.counters[tv] + 1
-    self.counters[tv] = current
-    self.pools[tv][v] = current
+  local id = self.ids[tv][v]
+  if not id then
+    id              = self.maxIds[tv] + 1
+    self.maxIds[tv] = id
+    self.ids[tv][v] = id
   end
-  return current
+  return id
 end
 
 function Inspector:putValue(v)
@@ -198,11 +221,10 @@ function Inspector:putValue(v)
   elseif tv == 'table' then
     self:putTable(v)
   else
-    self:puts('<',tv,' ',self:getCounter(v),'>')
+    self:puts('<',tv,' ',self:getId(v),'>')
   end
   return self
 end
-
 
 function Inspector:putKey(k)
   if isIdentifier(k) then return self:puts(k) end

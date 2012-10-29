@@ -34,7 +34,7 @@ context( 'inspect', function()
   end)
 
   it('works with functions', function()
-    assert_equal(inspect({ print, type, print }), '<1>{ <function 1>, <function 2>, <function 1> }')
+    assert_equal(inspect({ print, type, print }), '{ <function 1>, <function 2>, <function 1> }')
   end)
 
   it('works with booleans', function()
@@ -45,15 +45,15 @@ context( 'inspect', function()
   context('tables', function()
 
     it('works with simple array-like tables', function()
-      assert_equal(inspect({1,2,3}), "<1>{ 1, 2, 3 }" )
+      assert_equal(inspect({1,2,3}), "{ 1, 2, 3 }" )
     end)
 
     it('works with nested arrays', function()
-      assert_equal(inspect({'a','b','c', {'d','e'}, 'f'}), '<1>{ "a", "b", "c", <2>{ "d", "e" }, "f" }' )
+      assert_equal(inspect({'a','b','c', {'d','e'}, 'f'}), '{ "a", "b", "c", { "d", "e" }, "f" }' )
     end)
 
     it('works with simple dictionary tables', function()
-      assert_equal(inspect({a = 1, b = 2}), "<1>{\n  a = 1,\n  b = 2\n}")
+      assert_equal(inspect({a = 1, b = 2}), "{\n  a = 1,\n  b = 2\n}")
     end)
 
     it('sorts keys in dictionary tables', function()
@@ -61,12 +61,12 @@ context( 'inspect', function()
         [print] = 1, ["buy more"] = 1, a = 1,
         [14] = 1, [{c=2}] = 1, [true]= 1
       }
-      assert_equal(inspect(t), [[<1>{ 1, 2, 3,
+      assert_equal(inspect(t), [[{ 1, 2, 3,
   [14] = 1,
   [true] = 1,
   a = 1,
   ["buy more"] = 1,
-  [<2>{
+  [{
     c = 2
   }] = 1,
   [<function 1>] = 1
@@ -74,9 +74,9 @@ context( 'inspect', function()
     end)
 
     it('works with nested dictionary tables', function()
-      assert_equal(inspect( {d=3, b={c=2}, a=1} ), [[<1>{
+      assert_equal(inspect( {d=3, b={c=2}, a=1} ), [[{
   a = 1,
-  b = <2>{
+  b = {
     c = 2
   },
   d = 3
@@ -84,7 +84,7 @@ context( 'inspect', function()
     end)
 
     it('works with hybrid tables', function()
-      assert_equal(inspect({ 'a', {b = 1}, 2, c = 3, ['ahoy you'] = 4 }), [[<1>{ "a", <2>{
+      assert_equal(inspect({ 'a', {b = 1}, 2, c = 3, ['ahoy you'] = 4 }), [[{ "a", {
     b = 1
   }, 2,
   ["ahoy you"] = 4,
@@ -97,10 +97,10 @@ context( 'inspect', function()
       local keys = { [level5] = true }
 
       it('has a default depth of 4', function()
-        assert_equal(inspect(level5), [[<1>{ 1, 2, 3,
-  a = <2>{
-    b = <3>{
-      c = <4>{
+        assert_equal(inspect(level5), [[{ 1, 2, 3,
+  a = {
+    b = {
+      c = {
         d = {...}
       }
     }
@@ -108,20 +108,20 @@ context( 'inspect', function()
 }]])
       end)
       it('is modifiable by the user', function()
-        assert_equal(inspect(level5, 2), [[<1>{ 1, 2, 3,
-  a = <2>{
+        assert_equal(inspect(level5, 2), [[{ 1, 2, 3,
+  a = {
     b = {...}
   }
 }]])
-        assert_equal(inspect(level5, 1), [[<1>{ 1, 2, 3,
+        assert_equal(inspect(level5, 1), [[{ 1, 2, 3,
   a = {...}
 }]])
         assert_equal(inspect(level5, 0), "{...}")
-        assert_equal(inspect(level5, 6), [[<1>{ 1, 2, 3,
-  a = <2>{
-    b = <3>{
-      c = <4>{
-        d = <5>{
+        assert_equal(inspect(level5, 6), [[{ 1, 2, 3,
+  a = {
+    b = {
+      c = {
+        d = {
           e = 5
         }
       }
@@ -132,10 +132,10 @@ context( 'inspect', function()
       end)
 
       it('respects depth on keys', function()
-        assert_equal(inspect(keys), [[<1>{
-  [<2>{ 1, 2, 3,
-    a = <3>{
-      b = <4>{
+        assert_equal(inspect(keys), [[{
+  [{ 1, 2, 3,
+    a = {
+      b = {
         c = {...}
       }
     }
@@ -159,9 +159,9 @@ context( 'inspect', function()
       it('includes the metatable as an extra hash attribute', function()
         local foo = { foo = 1, __mode = 'v' }
         local bar = setmetatable({a = 1}, foo)
-        assert_equal(inspect(bar), [[<1>{
+        assert_equal(inspect(bar), [[{
   a = 1,
-  <metatable> = <2>{
+  <metatable> = {
     __mode = "v",
     foo = 1
   }
@@ -171,9 +171,9 @@ context( 'inspect', function()
       it('includes the __tostring metamethod if it exists', function()
         local foo = { foo = 1, __tostring = function() return 'hello\nworld' end }
         local bar = setmetatable({a = 1}, foo)
-        assert_equal(inspect(bar), [[<1>{ -- hello\nworld
+        assert_equal(inspect(bar), [[{ -- hello\nworld
   a = 1,
-  <metatable> = <2>{
+  <metatable> = {
     __tostring = <function 1>,
     foo = 1
   }
@@ -183,9 +183,9 @@ context( 'inspect', function()
       it('includes an error string if __tostring metamethod throws an error', function()
         local foo = { foo = 1, __tostring = function() error('hello', 0) end }
         local bar = setmetatable({a = 1}, foo)
-        assert_equal(inspect(bar), [[<1>{ -- error: hello
+        assert_equal(inspect(bar), [[{ -- error: hello
   a = 1,
-  <metatable> = <2>{
+  <metatable> = {
     __tostring = <function 1>,
     foo = 1
   }
