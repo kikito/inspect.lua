@@ -103,7 +103,7 @@ Also, make sure to read the license file; the text of that license file must app
 Specs
 =====
 
-This project uses "telescope":https://github.com/norman/telescope for its specs. If you want to run the specs, you will have to install telescope first. Then just execute the following from the root inspect folder:
+This project uses [telescope](https://github.com/norman/telescope) for its specs. If you want to run the specs, you will have to install telescope first. Then just execute the following from the root inspect folder:
 
     tsc -f spec/*
 
