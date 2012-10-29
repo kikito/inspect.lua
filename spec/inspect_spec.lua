@@ -20,7 +20,7 @@ context( 'inspect', function()
     end)
 
     it('uses regular quotes if the string has both quotes and apostrophes', function()
-    assert_equal(inspect("I have \"quotes\" and 'apostrophes'"), '"I have \\"quotes\\" and \'apostrophes\'"')
+      assert_equal(inspect("I have \"quotes\" and 'apostrophes'"), '"I have \\"quotes\\" and \'apostrophes\'"')
     end)
 
     it('escapes escape control characters', function()
