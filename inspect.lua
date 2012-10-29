@@ -27,7 +27,7 @@ local function unescape(str)
 end
 
 local function isIdentifier(str)
-  return string.match( str, "^[_%a][_%a%d]*$" )
+  return type(str) == 'string' and str:match( "^[_%a][_%a%d]*$" )
 end
 
 local function isArrayKey(k, length)
@@ -91,19 +91,11 @@ function Inspector:new(v, depth)
     }
   }
 
-  setmetatable( inspector, { 
+  setmetatable( inspector, {
     __index = Inspector,
     __tostring = function(instance) return table.concat(instance.buffer) end
   } )
   return inspector:putValue(v)
-end
-
-function Inspector:puts(...)
-  local args = {...}
-  for i=1, #args do
-    table.insert(self.buffer, tostring(args[i]))
-  end
-  return self
 end
 
 function Inspector:tabify()
@@ -117,6 +109,14 @@ end
 
 function Inspector:down()
   self.level = self.level + 1
+end
+
+function Inspector:puts(...)
+  local args = {...}
+  for i=1, #args do
+    table.insert(self.buffer, tostring(args[i]))
+  end
+  return self
 end
 
 function Inspector:putComma(comma)
@@ -160,7 +160,7 @@ function Inspector:putTable(t)
         self:tabify():puts('<metatable> = '):putValue(mt)
       end
     self:up()
-    
+
     if #dictKeys > 0 or mt then -- dictionary table. Justify closing }
       self:tabify()
     elseif length > 0 then -- array tables have one extra space before closing }
@@ -202,10 +202,9 @@ function Inspector:putValue(v)
   return self
 end
 
+
 function Inspector:putKey(k)
-  if type(k) == "string" and isIdentifier(k) then
-    return self:puts(k)
-  end
+  if isIdentifier(k) then return self:puts(k) end
   return self:puts( "[" ):putValue(k):puts("]")
 end
 
