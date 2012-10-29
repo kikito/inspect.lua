@@ -113,24 +113,26 @@ end
 
 function Inspector:puts(...)
   local args = {...}
+  local len = #self.buffer
   for i=1, #args do
-    table.insert(self.buffer, tostring(args[i]))
+    len = len + 1
+    self.buffer[len] = tostring(args[i])
   end
   return self
 end
 
-function Inspector:putComma(comma)
+function Inspector:commaControl(comma)
   if comma then self:puts(',') end
   return true
 end
 
 function Inspector:putTable(t)
   if self:alreadySeen(t) then
-    self:puts('<table ', self:getOrCreateCounter(t), '>')
+    self:puts('<table ', self:getCounter(t), '>')
   elseif self.level >= self.depth then
     self:puts('{...}')
   else
-    self:puts('<',self:getOrCreateCounter(t),'>{')
+    self:puts('<',self:getCounter(t),'>{')
     self:down()
 
       local length = #t
@@ -144,19 +146,19 @@ function Inspector:putTable(t)
 
       local comma = false
       for i=1, length do
-        comma = self:putComma(comma)
+        comma = self:commaControl(comma)
         self:puts(' '):putValue(t[i])
       end
 
       local dictKeys = getDictionaryKeys(t)
 
       for _,k in ipairs(dictKeys) do
-        comma = self:putComma(comma)
+        comma = self:commaControl(comma)
         self:tabify():putKey(k):puts(' = '):putValue(t[k])
       end
 
       if mt then
-        comma = self:putComma(comma)
+        comma = self:commaControl(comma)
         self:tabify():puts('<metatable> = '):putValue(mt)
       end
     self:up()
@@ -172,11 +174,10 @@ function Inspector:putTable(t)
 end
 
 function Inspector:alreadySeen(v)
-  local tv = type(v)
-  return self.pools[tv][v] ~= nil
+  return self.pools[type(v)][v] ~= nil
 end
 
-function Inspector:getOrCreateCounter(v)
+function Inspector:getCounter(v)
   local tv = type(v)
   local current = self.pools[tv][v]
   if not current then
@@ -197,7 +198,7 @@ function Inspector:putValue(v)
   elseif tv == 'table' then
     self:putTable(v)
   else
-    self:puts('<',tv,' ',self:getOrCreateCounter(v),'>')
+    self:puts('<',tv,' ',self:getCounter(v),'>')
   end
   return self
 end
