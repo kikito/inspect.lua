@@ -5,6 +5,9 @@
 -- inspired by http://lua-users.org/wiki/TableSerialization
 -----------------------------------------------------------------------------------------------------------------------
 
+local inspect ={}
+inspect.__VERSION = '1.2.0'
+
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
 local function smartQuote(str)
@@ -92,10 +95,7 @@ function Inspector:new(t, depth)
     tableAppearances = setmetatable({}, {__mode = "k"})
   }
 
-  setmetatable( inspector, {
-    __index = Inspector,
-    __tostring = function(instance) return table.concat(instance.buffer) end
-  } )
+  setmetatable(inspector, {__index = Inspector})
 
   inspector:countTableAppearances(t)
 
@@ -231,9 +231,13 @@ function Inspector:putKey(k)
   return self:puts( "[" ):putValue(k):puts("]")
 end
 
-local function inspect(t, depth)
-  return tostring(Inspector:new(t, depth))
+function Inspector:tostring()
+  return table.concat(self.buffer)
 end
+
+setmetatable(inspect, { __call = function(_,t,depth)
+  return Inspector:new(t, depth):tostring()
+end })
 
 return inspect
 
