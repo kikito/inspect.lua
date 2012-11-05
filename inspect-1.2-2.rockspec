@@ -1,7 +1,8 @@
 package = "inspect"
-version = "1.2-1"
+version = "1.2-2"
 source = {
-  url = "https://github.com/downloads/kikito/inspect.lua/inspect-1.2.tar.gz"
+  url = "https://github.com/kikito/inspect.lua/archive/v1.2.0.tar.gz",
+  dir = "inspect.lua-1.2.0"
 }
 description = {
   summary = "Lua table visualizer, ideal for debugging",
