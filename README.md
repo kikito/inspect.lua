@@ -1,6 +1,8 @@
 inspect.lua
 ===========
 
+[![Build Status](https://travis-ci.org/kikito/inspect.lua.png?branch=master)](https://travis-ci.org/kikito/inspect.lua)
+
 This function transform any Lua table into a human-readable representation of that table.
 
 The objective here is human understanding (i.e. for debugging), not serialization or compactness.
