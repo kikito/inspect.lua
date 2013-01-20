@@ -110,10 +110,10 @@ function Inspector:countTableAppearances(t)
         self:countTableAppearances(k)
         self:countTableAppearances(v)
       end
+      self:countTableAppearances(getmetatable(t))
     else
       self.tableAppearances[t] = self.tableAppearances[t] + 1
     end
-    self:countTableAppearances(getmetatable(t))
   end
 end
 
