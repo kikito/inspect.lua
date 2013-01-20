@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------------------------------------------------
--- inspect.lua - v1.2.0 (2012-10)
+-- inspect.lua - v1.2.1 (2013-01)
 -- Enrique García Cota - enrique.garcia.cota [AT] gmail [DOT] com
 -- human-readable representations of tables.
 -- inspired by http://lua-users.org/wiki/TableSerialization
