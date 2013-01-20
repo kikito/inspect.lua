@@ -64,7 +64,7 @@ local function getDictionaryKeys(t)
 end
 
 local function getToStringResultSafely(t, mt)
-  local __tostring = type(mt) == 'table' and mt.__tostring
+  local __tostring = type(mt) == 'table' and rawget(mt, '__tostring')
   local string, status
   if type(__tostring) == 'function' then
     status, string = pcall(__tostring, t)

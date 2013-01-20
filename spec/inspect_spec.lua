@@ -192,14 +192,26 @@ describe( 'inspect', function()
 }]])
       end)
 
-      it('accepts a table that is its own metatable without stack overflowing', function()
-        local x = {}
-        setmetatable(x,x)
-        assert.equals(inspect(x), [[<1>{
+      describe('When a table is its own metatable', function()
+        it('accepts a table that is its own metatable without stack overflowing', function()
+          local x = {}
+          setmetatable(x,x)
+          assert.equals(inspect(x), [[<1>{
   <metatable> = <table 1>
 }]])
-      end)
+        end)
 
+        it('can invoke the __tostring method without stack overflowing', function()
+          local t = {}
+          t.__index = t
+          setmetatable(t,t)
+          assert.equals(inspect(t), [[<1>{
+  __index = <table 1>,
+  <metatable> = <table 1>
+}]])
+        end)
+
+      end)
     end)
   end)
 end)
