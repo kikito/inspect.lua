@@ -10,7 +10,6 @@ local ipairs, pairs = ipairs, pairs
 local string = string
 local table = table
 local tostring = tostring
-local rawget = rawget
 local pcall = pcall
 local getmetatable, setmetatable = getmetatable, setmetatable
 local rawget, rawset = rawget, rawset
