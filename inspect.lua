@@ -5,16 +5,6 @@
 -- inspired by http://lua-users.org/wiki/TableSerialization
 -----------------------------------------------------------------------------------------------------------------------
 
-local type = type
-local ipairs, pairs = ipairs, pairs
-local string = string
-local table = table
-local tostring = tostring
-local pcall = pcall
-local getmetatable, setmetatable = getmetatable, setmetatable
-local rawget, rawset = rawget, rawset
-local math = math
-
 local inspect ={}
 inspect.__VERSION = '1.2.0'
 
