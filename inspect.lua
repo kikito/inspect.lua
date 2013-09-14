@@ -98,23 +98,18 @@ local function getToStringResultSafely(t, mt)
   return string
 end
 
-local inspectorMaxIdsMetaTable = {
-  __index = function (t, k)
-    if not rawget(t, k) then
-      rawset(t, k, 0)
-    end
+local maxIdsMetaTable = {
+  __index = function(self, typeName)
+    rawset(self, typeName, 0)
     return 0
   end
 }
 
-local inspectorIdsMetaTable = {
-  __index = function (t, k)
-    local v = rawget(t, k)
-    if not v then
-      rawset(t, k, setmetatable({}, {__mode = "kv"}))
-      v = rawget(t, k)
-    end
-    return v
+local idsMetaTable = {
+  __index = function (self, typeName)
+    local col = setmetatable({}, {__mode = "kv"})
+    rawset(self, typeName, col)
+    return col
   end
 }
 
@@ -122,12 +117,12 @@ local Inspector = {}
 
 function Inspector:new(t, depth)
   local inspector = {
-    buffer = {},
-    depth = depth,
-    level = 0,
-    maxIds = setmetatable({}, inspectorMaxIdsMetaTable),
-    ids = setmetatable({}, inspectorIdsMetaTable),
-    tableAppearances = setmetatable({}, {__mode = "k"})
+    buffer            = {},
+    depth             = depth,
+    level             = 0,
+    tableAppearances  = setmetatable({}, {__mode = "k"}),
+    maxIds            = setmetatable({}, maxIdsMetaTable),
+    ids               = setmetatable({}, idsMetaTable),
   }
 
   setmetatable(inspector, {__index = Inspector})
