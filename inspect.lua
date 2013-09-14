@@ -140,19 +140,13 @@ end
 function inspect.dump(rootObject, depth)
   depth = depth or math.huge
 
-  local buffer = {}
-  local blen   = 0 -- buffer length
-  local level  = 0
-  local maxIds = setmetatable({}, maxIdsMetaTable)
-  local ids    = setmetatable({}, idsMetaTable)
-
   local tableAppearances = countTableAppearances(rootObject)
 
-  local function down(f)
-    level = level + 1
-    f()
-    level = level - 1
-  end
+  local buffer = {}
+  local maxIds = setmetatable({}, maxIdsMetaTable)
+  local ids    = setmetatable({}, idsMetaTable)
+  local level  = 0
+  local blen   = 0 -- buffer length
 
   local function puts(...)
     local args = {...}
@@ -160,6 +154,12 @@ function inspect.dump(rootObject, depth)
       blen = blen + 1
       buffer[blen] = tostring(args[i])
     end
+  end
+
+  local function down(f)
+    level = level + 1
+    f()
+    level = level - 1
   end
 
   local function tabify()
