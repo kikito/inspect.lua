@@ -1,4 +1,5 @@
 local inspect = require 'inspect'
+local is_luajit, ffi = pcall(require, 'ffi')
 
 describe( 'inspect', function()
 
@@ -42,6 +43,14 @@ describe( 'inspect', function()
     assert.equals(inspect(false), 'false')
   end)
 
+  if is_luajit then
+    describe('luajit cdata', function()
+      it('works with luajit cdata', function()
+        assert.equals(inspect({ ffi.new("int", 1), ffi.typeof("int"), ffi.typeof("int")(1) }), '{ <cdata 1>, <cdata 2>, <cdata 3> }')
+      end)
+    end)
+  end
+
   describe('tables', function()
 
     it('works with simple array-like tables', function()
@@ -61,7 +70,7 @@ describe( 'inspect', function()
         [print] = 1, ["buy more"] = 1, a = 1,
         [14] = 1, [{c=2}] = 1, [true]= 1
       }
-      assert.equals(inspect(t), [[{ 1, 2, 3,
+      local s = [[{ 1, 2, 3,
   [14] = 1,
   [true] = 1,
   a = 1,
@@ -69,8 +78,12 @@ describe( 'inspect', function()
   [{
     c = 2
   }] = 1,
-  [<function 1>] = 1
-}]])
+  [<function 1>] = 1]]
+      if is_luajit then
+	    t[ffi.new("int", 1)] = 1
+		s = s .. ",\n  [<cdata 1>] = 1"
+      end
+      assert.equals(inspect(t), s .. "\n}")
     end)
 
     it('works with nested dictionary tables', function()
