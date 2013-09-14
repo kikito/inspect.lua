@@ -1,12 +1,32 @@
------------------------------------------------------------------------------------------------------------------------
--- inspect.lua - v1.2.1 (2013-01)
--- Enrique García Cota - enrique.garcia.cota [AT] gmail [DOT] com
--- human-readable representations of tables.
--- inspired by http://lua-users.org/wiki/TableSerialization
------------------------------------------------------------------------------------------------------------------------
+local inspect ={
+  _VERSION = 'inspect.lua 1.2.2',
+  _URL     = 'http://github.com/kikito/inspect.lua',
+  _DESCRIPTION = 'human-readable representations of tables',
+  _LICENSE = [[
+    MIT LICENSE
 
-local inspect ={}
-inspect.__VERSION = '1.2.0'
+    Copyright (c) 2013 Enrique García Cota
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  ]]
+}
 
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
