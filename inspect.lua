@@ -61,21 +61,26 @@ local function isDictionaryKey(k, length)
   return not isArrayKey(k, length)
 end
 
-local sortOrdersByType = setmetatable({
+local defaultTypeOrders = {
   ['number']   = 1, ['boolean']  = 2, ['string'] = 3, ['table'] = 4,
   ['function'] = 5, ['userdata'] = 6, ['thread'] = 7
-},
-{ __index = function (t, k)
-  if not rawget(t, k) then
-    return math.huge
-  end
-end })
+}
 
 local function sortKeys(a, b)
   local ta, tb = type(a), type(b)
-  if ta ~= tb then return sortOrdersByType[ta] < sortOrdersByType[tb] end
-  if ta == 'string' or ta == 'number' then return a < b end
-  return false
+
+  -- strings and numbers are sorted numerically/alphabetically
+  if ta == tb and (ta == 'string' or ta == 'number') then return a < b end
+
+  local dta, dtb = defaultTypeOrders[ta], defaultTypeOrders[tb]
+  -- Two default types are compared according to the defaultTypeOrders table
+  if dta and dtb then return defaultTypeOrders[ta] < defaultTypeOrders[tb]
+  elseif dta     then return true  -- default types before custom ones
+  elseif dtb     then return false -- custom types after default ones
+  end
+
+  -- custom types are sorted out alphabetically
+  return ta < tb
 end
 
 local function getDictionaryKeys(t)
