@@ -54,19 +54,24 @@ local function isIdentifier(str)
 end
 
 local function isArrayKey(k, length)
-  return type(k)=='number' and 1 <= k and k <= length
+  return type(k) == 'number' and 1 <= k and k <= length
 end
 
 local function isDictionaryKey(k, length)
   return not isArrayKey(k, length)
 end
 
-local sortOrdersByType = {
+local sortOrdersByType = setmetatable({
   ['number']   = 1, ['boolean']  = 2, ['string'] = 3, ['table'] = 4,
   ['function'] = 5, ['userdata'] = 6, ['thread'] = 7
-}
+},
+{ __index = function (t, k)
+  if not rawget(t, k) then
+    return math.huge
+  end
+end })
 
-local function sortKeys(a,b)
+local function sortKeys(a, b)
   local ta, tb = type(a), type(b)
   if ta ~= tb then return sortOrdersByType[ta] < sortOrdersByType[tb] end
   if ta == 'string' or ta == 'number' then return a < b end
@@ -77,7 +82,7 @@ local function getDictionaryKeys(t)
   local length = #t
   local keys = {}
   for k,_ in pairs(t) do
-    if isDictionaryKey(k, length) then table.insert(keys,k) end
+    if isDictionaryKey(k, length) then table.insert(keys, k) end
   end
   table.sort(keys, sortKeys)
   return keys
@@ -93,6 +98,26 @@ local function getToStringResultSafely(t, mt)
   return string
 end
 
+local inspectorMaxIdsMetaTable = {
+  __index = function (t, k)
+    if not rawget(t, k) then
+      rawset(t, k, 0)
+    end
+    return 0
+  end
+}
+
+local inspectorIdsMetaTable = {
+  __index = function (t, k)
+    local v = rawget(t, k)
+    if not v then
+      rawset(t, k, setmetatable({}, {__mode = "kv"}))
+      v = rawget(t, k)
+    end
+    return v
+  end
+}
+
 local Inspector = {}
 
 function Inspector:new(t, depth)
@@ -100,18 +125,8 @@ function Inspector:new(t, depth)
     buffer = {},
     depth = depth,
     level = 0,
-    maxIds = {
-      ['function'] = 0,
-      ['userdata'] = 0,
-      ['thread']   = 0,
-      ['table']    = 0
-    },
-    ids = {
-      ['function'] = setmetatable({}, {__mode = "kv"}),
-      ['userdata'] = setmetatable({}, {__mode = "kv"}),
-      ['thread']   = setmetatable({}, {__mode = "kv"}),
-      ['table']    = setmetatable({}, {__mode = "kv"})
-    },
+    maxIds = setmetatable({}, inspectorMaxIdsMetaTable),
+    ids = setmetatable({}, inspectorIdsMetaTable),
     tableAppearances = setmetatable({}, {__mode = "k"})
   }
 
