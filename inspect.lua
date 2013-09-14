@@ -175,8 +175,8 @@ function Inspector:puts(...)
   return self
 end
 
-function Inspector:commaControl(comma)
-  if comma then self:puts(',') end
+function Inspector:commaControl(needsComma)
+  if needsComma then self:puts(',') end
   return true
 end
 
@@ -201,21 +201,21 @@ function Inspector:putTable(t)
         if length >= 1 then self:tabify() end -- tabify the array values
       end
 
-      local comma = false
+      local needsComma = false
       for i=1, length do
-        comma = self:commaControl(comma)
+        needsComma = self:commaControl(needsComma)
         self:puts(' '):putValue(t[i])
       end
 
       local dictKeys = getDictionaryKeys(t)
 
       for _,k in ipairs(dictKeys) do
-        comma = self:commaControl(comma)
+        needsComma = self:commaControl(needsComma)
         self:tabify():putKey(k):puts(' = '):putValue(t[k])
       end
 
       if mt then
-        comma = self:commaControl(comma)
+        needsComma = self:commaControl(needsComma)
         self:tabify():puts('<metatable> = '):putValue(mt)
       end
 
