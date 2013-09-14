@@ -45,7 +45,7 @@ local controlCharsTranslation = {
 local function unescapeChar(c) return controlCharsTranslation[c] end
 
 local function unescape(str)
-  local result, _ = string.gsub( str, "(%c)", unescapeChar )
+  local result, _ = string.gsub(str, "(%c)", unescapeChar)
   return result
 end
 
@@ -84,8 +84,7 @@ local function sortKeys(a, b)
 end
 
 local function getDictionaryKeys(t)
-  local length = #t
-  local keys = {}
+  local keys, length = {}, #t
   for k,_ in pairs(t) do
     if isDictionaryKey(k, length) then table.insert(keys, k) end
   end
@@ -95,12 +94,12 @@ end
 
 local function getToStringResultSafely(t, mt)
   local __tostring = type(mt) == 'table' and rawget(mt, '__tostring')
-  local string, status
+  local str, ok
   if type(__tostring) == 'function' then
-    status, string = pcall(__tostring, t)
-    string = status and string or 'error: ' .. tostring(string)
+    ok, str = pcall(__tostring, t)
+    str = ok and str or 'error: ' .. tostring(str)
   end
-  return string
+  if type(str) == 'string' and #str > 0 then return str end
 end
 
 local maxIdsMetaTable = {
@@ -118,161 +117,159 @@ local idsMetaTable = {
   end
 }
 
-local Inspector = {}
+local function countTableAppearances(t, tableAppearances)
+  tableAppearances = tableAppearances or setmetatable({}, {__mode = "k"})
 
-function Inspector:new(t, depth)
-  local inspector = {
-    buffer            = {},
-    depth             = depth,
-    level             = 0,
-    tableAppearances  = setmetatable({}, {__mode = "k"}),
-    maxIds            = setmetatable({}, maxIdsMetaTable),
-    ids               = setmetatable({}, idsMetaTable),
-  }
-
-  setmetatable(inspector, {__index = Inspector})
-
-  inspector:countTableAppearances(t)
-
-  return inspector:putValue(t)
-end
-
-function Inspector:countTableAppearances(t)
   if type(t) == 'table' then
-    if not self.tableAppearances[t] then
-      self.tableAppearances[t] = 1
+    if not tableAppearances[t] then
+      tableAppearances[t] = 1
       for k,v in pairs(t) do
-        self:countTableAppearances(k)
-        self:countTableAppearances(v)
+        countTableAppearances(k, tableAppearances)
+        countTableAppearances(v, tableAppearances)
       end
-      self:countTableAppearances(getmetatable(t))
+      countTableAppearances(getmetatable(t), tableAppearances)
     else
-      self.tableAppearances[t] = self.tableAppearances[t] + 1
+      tableAppearances[t] = tableAppearances[t] + 1
     end
   end
+
+  return tableAppearances
 end
 
-function Inspector:tabify()
-  self:puts("\n", string.rep("  ", self.level))
-  return self
-end
+-------------------------------------------------------------------
+function inspect.dump(rootObject, depth)
+  depth = depth or math.huge
 
-function Inspector:up()
-  self.level = self.level - 1
-end
+  local buffer = {}
+  local blen   = 0 -- buffer length
+  local level  = 0
+  local maxIds = setmetatable({}, maxIdsMetaTable)
+  local ids    = setmetatable({}, idsMetaTable)
 
-function Inspector:down()
-  self.level = self.level + 1
-end
+  local tableAppearances = countTableAppearances(rootObject)
 
-function Inspector:puts(...)
-  local args = {...}
-  local len = #self.buffer
-  for i=1, #args do
-    len = len + 1
-    self.buffer[len] = tostring(args[i])
+  local function down(f)
+    level = level + 1
+    f()
+    level = level - 1
   end
-  return self
-end
 
-function Inspector:commaControl(needsComma)
-  if needsComma then self:puts(',') end
-  return true
-end
-
-function Inspector:putTable(t)
-  if self:alreadyVisited(t) then
-    self:puts('<table ', self:getId(t), '>')
-  elseif self.depth and self.level >= self.depth then
-    self:puts('{...}')
-  else
-    if self.tableAppearances[t] > 1 then
-      self:puts('<',self:getId(t),'>')
+  local function puts(...)
+    local args = {...}
+    for i=1, #args do
+      blen = blen + 1
+      buffer[blen] = tostring(args[i])
     end
-    self:puts('{')
-    self:down()
+  end
 
-      local length = #t
-      local mt = getmetatable(t)
+  local function tabify()
+    puts("\n", string.rep("  ", level))
+  end
 
-      local string = getToStringResultSafely(t, mt)
-      if type(string) == 'string' and #string > 0 then
-        self:puts(' -- ', unescape(string))
-        if length >= 1 then self:tabify() end -- tabify the array values
-      end
+  local function commaControl(needsComma)
+    if needsComma then puts(',') end
+    return true
+  end
 
-      local needsComma = false
-      for i=1, length do
-        needsComma = self:commaControl(needsComma)
-        self:puts(' '):putValue(t[i])
-      end
+  local function alreadyVisited(v)
+    return ids[type(v)][v] ~= nil
+  end
 
-      local dictKeys = getDictionaryKeys(t)
-
-      for _,k in ipairs(dictKeys) do
-        needsComma = self:commaControl(needsComma)
-        self:tabify():putKey(k):puts(' = '):putValue(t[k])
-      end
-
-      if mt then
-        needsComma = self:commaControl(needsComma)
-        self:tabify():puts('<metatable> = '):putValue(mt)
-      end
-
-    self:up()
-
-    if #dictKeys > 0 or mt then -- dictionary table. Justify closing }
-      self:tabify()
-    elseif length > 0 then -- array tables have one extra space before closing }
-      self:puts(' ')
+  local function getId(v)
+    local tv = type(v)
+    local id = ids[tv][v]
+    if not id then
+      id         = maxIds[tv] + 1
+      maxIds[tv] = id
+      ids[tv][v] = id
     end
-    self:puts('}')
+    return id
   end
-  return self
-end
 
-function Inspector:alreadyVisited(v)
-  return self.ids[type(v)][v] ~= nil
-end
+  local putValue -- forward declaration that needs to go before putTable & putKey
 
-function Inspector:getId(v)
-  local tv = type(v)
-  local id = self.ids[tv][v]
-  if not id then
-    id              = self.maxIds[tv] + 1
-    self.maxIds[tv] = id
-    self.ids[tv][v] = id
+  local function putKey(k)
+    if isIdentifier(k) then return puts(k) end
+    puts( "[" )
+    putValue(k)
+    puts("]")
   end
-  return id
-end
 
-function Inspector:putValue(v)
-  local tv = type(v)
+  local function putTable(t)
+    if alreadyVisited(t) then
+      puts('<table ', getId(t), '>')
+    elseif level >= depth then
+      puts('{...}')
+    else
+      if tableAppearances[t] > 1 then puts('<', getId(t), '>') end
 
-  if tv == 'string' then
-    self:puts(smartQuote(unescape(v)))
-  elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
-    self:puts(tostring(v))
-  elseif tv == 'table' then
-    self:putTable(v)
-  else
-    self:puts('<',tv,' ',self:getId(v),'>')
+      local dictKeys          = getDictionaryKeys(t)
+      local length            = #t
+      local mt                = getmetatable(t)
+      local to_string_result  = getToStringResultSafely(t, mt)
+
+      puts('{')
+      down(function()
+        if to_string_result then
+          puts(' -- ', unescape(to_string_result))
+          if length >= 1 then tabify() end -- tabify the array values
+        end
+
+        local needsComma = false
+        for i=1, length do
+          needsComma = commaControl(needsComma)
+          puts(' ')
+          putValue(t[i])
+        end
+
+        for _,k in ipairs(dictKeys) do
+          needsComma = commaControl(needsComma)
+          tabify()
+          putKey(k)
+          puts(' = ')
+          putValue(t[k])
+        end
+
+        if mt then
+          needsComma = commaControl(needsComma)
+          tabify()
+          puts('<metatable> = ')
+          putValue(mt)
+        end
+      end)
+
+      if #dictKeys > 0 or mt then -- dictionary table. Justify closing }
+        tabify()
+      elseif length > 0 then -- array tables have one extra space before closing }
+        puts(' ')
+      end
+
+      puts('}')
+    end
+
   end
-  return self
+
+  -- putvalue is forward-declared before putTable & putKey
+  putValue = function(v)
+    local tv = type(v)
+
+    if tv == 'string' then
+      puts(smartQuote(unescape(v)))
+    elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
+      puts(tostring(v))
+    elseif tv == 'table' then
+      putTable(v)
+    else
+      puts('<',tv,' ',getId(v),'>')
+    end
+  end
+
+  putValue(rootObject)
+
+  return table.concat(buffer)
 end
 
-function Inspector:putKey(k)
-  if isIdentifier(k) then return self:puts(k) end
-  return self:puts( "[" ):putValue(k):puts("]")
-end
-
-function Inspector:tostring()
-  return table.concat(self.buffer)
-end
-
-setmetatable(inspect, { __call = function(_,t,depth)
-  return Inspector:new(t, depth):tostring()
-end })
+setmetatable(inspect, { __call = function(_, ...) return inspect.dump(...) end })
 
 return inspect
 
