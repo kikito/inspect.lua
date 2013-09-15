@@ -105,7 +105,16 @@ describe( 'inspect', function()
 }]])
     end)
 
-    describe('depth', function()
+    it('displays <table x> instead of repeating an already existing table', function()
+      local a = { 1, 2, 3 }
+      local b = { 'a', 'b', 'c', a }
+      a[4] = b
+      a[5] = a
+      a[6] = b
+      assert.equals(inspect(a), '<1>{ 1, 2, 3, <2>{ "a", "b", "c", <table 1> }, <table 1>, <table 2> }')
+    end)
+
+    describe('The depth parameter', function()
       local level5 = { 1,2,3, a = { b = { c = { d = { e = 5 } } } } }
       local keys = { [level5] = true }
 
@@ -123,16 +132,16 @@ describe( 'inspect', function()
 }]])
       end)
       it('is modifiable by the user', function()
-        assert.equals(inspect(level5, 2), [[{ 1, 2, 3,
+        assert.equals(inspect(level5, {depth = 2}), [[{ 1, 2, 3,
   a = {
     b = {...}
   }
 }]])
-        assert.equals(inspect(level5, 1), [[{ 1, 2, 3,
+        assert.equals(inspect(level5, {depth = 1}), [[{ 1, 2, 3,
   a = {...}
 }]])
-        assert.equals(inspect(level5, 0), "{...}")
-        assert.equals(inspect(level5, 4), [[{ 1, 2, 3,
+        assert.equals(inspect(level5, {depth = 0}), "{...}")
+        assert.equals(inspect(level5, {depth = 4}), [[{ 1, 2, 3,
   a = {
     b = {
       c = {
@@ -145,7 +154,7 @@ describe( 'inspect', function()
       end)
 
       it('respects depth on keys', function()
-        assert.equals(inspect(keys, 4), [[{
+        assert.equals(inspect(keys, {depth = 4}), [[{
   [{ 1, 2, 3,
     a = {
       b = {
@@ -155,16 +164,6 @@ describe( 'inspect', function()
   }] = true
 }]])
       end)
-
-      it('displays <table x> instead of repeating an already existing table', function()
-        local a = { 1, 2, 3 }
-        local b = { 'a', 'b', 'c', a }
-        a[4] = b
-        a[5] = a
-        a[6] = b
-        assert.equals(inspect(a), '<1>{ 1, 2, 3, <2>{ "a", "b", "c", <table 1> }, <table 1>, <table 2> }')
-      end)
-
     end)
 
     describe('metatables', function()

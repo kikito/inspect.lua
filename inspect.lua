@@ -137,8 +137,9 @@ local function countTableAppearances(t, tableAppearances)
 end
 
 -------------------------------------------------------------------
-function inspect.dump(rootObject, depth)
-  depth = depth or math.huge
+function inspect.inspect(rootObject, options)
+  options = options or {}
+  depth   = options.depth or math.huge
 
   local tableAppearances = countTableAppearances(rootObject)
 
@@ -269,7 +270,7 @@ function inspect.dump(rootObject, depth)
   return table.concat(buffer)
 end
 
-setmetatable(inspect, { __call = function(_, ...) return inspect.dump(...) end })
+setmetatable(inspect, { __call = function(_, ...) return inspect.inspect(...) end })
 
 return inspect
 
