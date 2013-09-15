@@ -136,10 +136,20 @@ local function countTableAppearances(t, tableAppearances)
   return tableAppearances
 end
 
+local function parse_filter(filter)
+  if type(filter) == 'function' then return filter end
+  -- not a function, so it must be a table or table-like
+  filter = type(filter) == 'table' and filter or {filter}
+  local dictionary = {}
+  for _,v in pairs(filter) do dictionary[v] = true end
+  return function(x) return dictionary[x] end
+end
+
 -------------------------------------------------------------------
 function inspect.inspect(rootObject, options)
-  options = options or {}
-  depth   = options.depth or math.huge
+  options       = options or {}
+  local depth   = options.depth or math.huge
+  local filter  = parse_filter(options.filter or {})
 
   local tableAppearances = countTableAppearances(rootObject)
 
@@ -252,16 +262,20 @@ function inspect.inspect(rootObject, options)
 
   -- putvalue is forward-declared before putTable & putKey
   putValue = function(v)
-    local tv = type(v)
-
-    if tv == 'string' then
-      puts(smartQuote(unescape(v)))
-    elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
-      puts(tostring(v))
-    elseif tv == 'table' then
-      putTable(v)
+    if filter(v) then
+      puts('<filtered>')
     else
-      puts('<',tv,' ',getId(v),'>')
+      local tv = type(v)
+
+      if tv == 'string' then
+        puts(smartQuote(unescape(v)))
+      elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
+        puts(tostring(v))
+      elseif tv == 'table' then
+        putTable(v)
+      else
+        puts('<',tv,' ',getId(v),'>')
+      end
     end
   end
 
