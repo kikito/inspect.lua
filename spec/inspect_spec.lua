@@ -153,6 +153,28 @@ describe( 'inspect', function()
 
       end)
 
+      it('can be passed directly as second argument', function()
+        assert.equals(inspect(level5, 2), [[{ 1, 2, 3,
+  a = {
+    b = {...}
+  }
+}]])
+        assert.equals(inspect(level5, 1), [[{ 1, 2, 3,
+  a = {...}
+}]])
+        assert.equals(inspect(level5, 0), "{...}")
+        assert.equals(inspect(level5, 4), [[{ 1, 2, 3,
+  a = {
+    b = {
+      c = {
+        d = {...}
+      }
+    }
+  }
+}]])
+
+      end)
+
       it('respects depth on keys', function()
         assert.equals(inspect(keys, {depth = 4}), [[{
   [{ 1, 2, 3,

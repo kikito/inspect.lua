@@ -147,6 +147,10 @@ end
 
 -------------------------------------------------------------------
 function inspect.inspect(rootObject, options)
+  if type(options) == 'number' then
+    options = {depth = options}
+  end
+
   options       = options or {}
   local depth   = options.depth or math.huge
   local filter  = parse_filter(options.filter or {})
