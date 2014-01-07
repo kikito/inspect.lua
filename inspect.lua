@@ -39,7 +39,7 @@ end
 
 local controlCharsTranslation = {
   ["\a"] = "\\a",  ["\b"] = "\\b", ["\f"] = "\\f",  ["\n"] = "\\n",
-  ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v",  ["\\"] = "\\\\"
+  ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v"
 }
 
 local function escapeChar(c) return controlCharsTranslation[c] end
