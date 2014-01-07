@@ -31,10 +31,10 @@ local inspect ={
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
 local function smartQuote(str)
-  if string.match( string.gsub(str,"[^'\"]",""), '^"+$' ) then
+  if str:match('"') and not str:match("'") then
     return "'" .. str .. "'"
   end
-  return string.format("%q", str ):gsub("\\\n", "\n")
+  return '"' .. str:gsub('"', '\\"') .. '"'
 end
 
 local controlCharsTranslation = {
@@ -45,7 +45,7 @@ local controlCharsTranslation = {
 local function escapeChar(c) return controlCharsTranslation[c] end
 
 local function escape(str)
-  local result = string.gsub(str, "(%c)", escapeChar)
+  local result = str:gsub("\\", "\\\\"):gsub("(%c)", escapeChar)
   return result
 end
 
@@ -268,7 +268,7 @@ function inspect.inspect(rootObject, options)
       local tv = type(v)
 
       if tv == 'string' then
-        puts(escape(smartQuote(v)))
+        puts(smartQuote(escape(v)))
       elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
         puts(tostring(v))
       elseif tv == 'table' then
