@@ -34,7 +34,7 @@ local function smartQuote(str)
   if string.match( string.gsub(str,"[^'\"]",""), '^"+$' ) then
     return "'" .. str .. "'"
   end
-  return string.format("%q", str )
+  return string.format("%q", str ):gsub("\\\n", "\n")
 end
 
 local controlCharsTranslation = {
@@ -268,7 +268,7 @@ function inspect.inspect(rootObject, options)
       local tv = type(v)
 
       if tv == 'string' then
-        puts(smartQuote(escape(v)))
+        puts(escape(smartQuote(v)))
       elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
         puts(tostring(v))
       elseif tv == 'table' then
