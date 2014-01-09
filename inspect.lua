@@ -31,21 +31,21 @@ local inspect ={
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
 local function smartQuote(str)
-  if string.match( string.gsub(str,"[^'\"]",""), '^"+$' ) then
+  if str:match('"') and not str:match("'") then
     return "'" .. str .. "'"
   end
-  return string.format("%q", str )
+  return '"' .. str:gsub('"', '\\"') .. '"'
 end
 
 local controlCharsTranslation = {
   ["\a"] = "\\a",  ["\b"] = "\\b", ["\f"] = "\\f",  ["\n"] = "\\n",
-  ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v",  ["\\"] = "\\\\"
+  ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v"
 }
 
-local function unescapeChar(c) return controlCharsTranslation[c] end
+local function escapeChar(c) return controlCharsTranslation[c] end
 
-local function unescape(str)
-  local result, _ = string.gsub(str, "(%c)", unescapeChar)
+local function escape(str)
+  local result = str:gsub("\\", "\\\\"):gsub("(%c)", escapeChar)
   return result
 end
 
@@ -222,7 +222,7 @@ function inspect.inspect(rootObject, options)
       puts('{')
       down(function()
         if to_string_result then
-          puts(' -- ', unescape(to_string_result))
+          puts(' -- ', escape(to_string_result))
           if length >= 1 then tabify() end -- tabify the array values
         end
 
@@ -268,7 +268,7 @@ function inspect.inspect(rootObject, options)
       local tv = type(v)
 
       if tv == 'string' then
-        puts(smartQuote(unescape(v)))
+        puts(smartQuote(escape(v)))
       elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
         puts(tostring(v))
       elseif tv == 'table' then

@@ -24,10 +24,24 @@ describe( 'inspect', function()
       assert.equals(inspect("I have \"quotes\" and 'apostrophes'"), '"I have \\"quotes\\" and \'apostrophes\'"')
     end)
 
-    it('escapes escape control characters', function()
-       assert.equals(inspect('I have \n new \n lines'), '"I have \\\\n new \\\\n lines"')
-       assert.equals(inspect('I have \b a back space'), '"I have \\\\b a back space"')
+    it('escapes newlines properly', function()
+       assert.equals(inspect('I have \n new \n lines'), '"I have \\n new \\n lines"')
     end)
+
+    it('escapes tabs properly', function()
+       assert.equals(inspect('I have \t a tab character'), '"I have \\t a tab character"')
+    end)
+
+    it('escapes backspaces properly', function()
+       assert.equals(inspect('I have \b a back space'), '"I have \\b a back space"')
+    end)
+
+    it('backslashes its backslashes', function()
+       assert.equals(inspect('I have \\ a backslash'), '"I have \\\\ a backslash"')
+       assert.equals(inspect('I have \\\\ two backslashes'), '"I have \\\\\\\\ two backslashes"')
+       assert.equals(inspect('I have \\\n a backslash followed by a newline'), '"I have \\\\\\n a backslash followed by a newline"')
+    end)
+
   end)
 
   it('works with nil', function()
