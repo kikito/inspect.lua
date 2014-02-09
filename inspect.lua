@@ -145,6 +145,13 @@ local function parse_filter(filter)
   return function(x) return dictionary[x] end
 end
 
+local function makePath(path, key)
+  local newPath, len = {}, #path
+  for i=1, len do newPath[i] = path[i] end
+  newPath[len+1] = key
+  return newPath
+end
+
 -------------------------------------------------------------------
 function inspect.inspect(rootObject, options)
   options       = options or {}
@@ -202,11 +209,11 @@ function inspect.inspect(rootObject, options)
   local function putKey(k)
     if isIdentifier(k) then return puts(k) end
     puts( "[" )
-    putValue(k)
+    putValue(k, {})
     puts("]")
   end
 
-  local function putTable(t)
+  local function putTable(t, path)
     if alreadyVisited(t) then
       puts('<table ', getId(t), '>')
     elseif level >= depth then
@@ -230,7 +237,7 @@ function inspect.inspect(rootObject, options)
         for i=1, length do
           needsComma = commaControl(needsComma)
           puts(' ')
-          putValue(t[i])
+          putValue(t[i], makePath(path, i))
         end
 
         for _,k in ipairs(dictKeys) do
@@ -238,14 +245,14 @@ function inspect.inspect(rootObject, options)
           tabify()
           putKey(k)
           puts(' = ')
-          putValue(t[k])
+          putValue(t[k], makePath(path, k))
         end
 
         if mt then
           needsComma = commaControl(needsComma)
           tabify()
           puts('<metatable> = ')
-          putValue(mt)
+          putValue(mt, makePath(path, '<metatable>'))
         end
       end)
 
@@ -261,8 +268,8 @@ function inspect.inspect(rootObject, options)
   end
 
   -- putvalue is forward-declared before putTable & putKey
-  putValue = function(v)
-    if filter(v) then
+  putValue = function(v, path)
+    if filter(v, path) then
       puts('<filtered>')
     else
       local tv = type(v)
@@ -272,14 +279,14 @@ function inspect.inspect(rootObject, options)
       elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
         puts(tostring(v))
       elseif tv == 'table' then
-        putTable(v)
+        putTable(v, path)
       else
         puts('<',tv,' ',getId(v),'>')
       end
     end
   end
 
-  putValue(rootObject)
+  putValue(rootObject, {})
 
   return table.concat(buffer)
 end

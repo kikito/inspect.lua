@@ -216,6 +216,22 @@ describe( 'inspect', function()
 
       end)
 
+      it('filters by path', function()
+        local people = { tony = { age = 21 }, martha = { age = 34} }
+        local hideMarthaAge = function(_,path)
+          return table.concat(path, '.') == 'martha.age'
+        end
+
+        assert.equals(inspect(people, {filter = hideMarthaAge}), [[{
+  martha = {
+    age = <filtered>
+  },
+  tony = {
+    age = 21
+  }
+}]])
+      end)
+
       it('does not increase the table ids', function()
         local a = {'this is a'}
         local b = {}
