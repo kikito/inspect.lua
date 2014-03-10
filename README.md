@@ -13,7 +13,7 @@ Examples of use
 `inspect` has the following declaration: `str = inspect(value, <options>)`.
 
 `value` can be any Lua value. `inspect` transforms simple types (like strings or numbers) into strings. Tables, on the other
-hand, are rendered in a way a human can undersand.
+hand, are rendered in a way a human can understand.
 
 "Array-like" tables are rendered horizontally:
 
@@ -116,14 +116,14 @@ Sometimes it might be convenient to "filter out" some parts of the output. The `
 Gotchas / Warnings
 ==================
 
-This method is *not* appropiate for saving/restoring tables. It is ment to be used by the programmer mainly while debugging a program.
+This method is *not* appropriate for saving/restoring tables. It is meant to be used by the programmer mainly while debugging a program.
 
 Installation
 ============
 
 Just copy the inspect.lua file somewhere in your projects (maybe inside a /lib/ folder) and require it accordingly.
 
-Remember to store the value returned by require somewhere! (I suggest a local variable named inspect, altough others might like table.inspect)
+Remember to store the value returned by require somewhere! (I suggest a local variable named inspect, although others might like table.inspect)
 
     local inspect = require 'inspect'
           -- or --
