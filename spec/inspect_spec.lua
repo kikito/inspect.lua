@@ -296,8 +296,7 @@ describe( 'inspect', function()
           local x = {}
           setmetatable(x,x)
           assert.equals(inspect(x), [[<1>{
-  <metatable> = <table 1>
-}]])
+  <metatable> = <table 1>}]])
         end)
 
         it('can invoke the __tostring method without stack overflowing', function()
