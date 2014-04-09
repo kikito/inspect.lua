@@ -154,9 +154,10 @@ end
 
 -------------------------------------------------------------------
 function inspect.inspect(rootObject, options)
-  options       = options or {}
-  local depth   = options.depth or math.huge
-  local filter  = parse_filter(options.filter or {})
+  options           = options or {}
+  local excludeMeta = options.excludeMeta or false
+  local depth       = options.depth or math.huge
+  local filter      = parse_filter(options.filter or {})
 
   local tableAppearances = countTableAppearances(rootObject)
 
@@ -247,8 +248,9 @@ function inspect.inspect(rootObject, options)
           puts(' = ')
           putValue(t[k], makePath(path, k))
         end
-
-        if mt then
+        --Cache option to print or not print metatable info
+        local printmt = mt and not excludeMeta
+        if printmt then
           needsComma = commaControl(needsComma)
           tabify()
           puts('<metatable> = ')
@@ -256,7 +258,7 @@ function inspect.inspect(rootObject, options)
         end
       end)
 
-      if #dictKeys > 0 or mt then -- dictionary table. Justify closing }
+      if #dictKeys > 0 or printmt then -- dictionary table. Justify closing }
         tabify()
       elseif length > 0 then -- array tables have one extra space before closing }
         puts(' ')
