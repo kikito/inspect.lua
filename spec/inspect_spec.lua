@@ -180,6 +180,48 @@ describe( 'inspect', function()
       end)
     end)
 
+    describe('the process option', function()
+
+      it('can be used to remove a particular element easily', function()
+        local names     = {'Andrew', 'Peter', 'Ann' }
+        local removeAnn = function(item) if item ~= 'Ann' then return item end end
+        assert.equals(inspect(names, {process = removeAnn}), '{ "Andrew", "Peter" }')
+      end)
+
+      it('can use the path', function()
+        local names     = {'Andrew', 'Peter', 'Ann' }
+        local removeThird = function(item, path) if path[1] ~= 3 then return item end end
+        assert.equals(inspect(names, {process = removeThird}), '{ "Andrew", "Peter" }')
+      end)
+
+      it('can replace values', function()
+        local names     = {'Andrew', 'Peter', 'Ann' }
+        local filterAnn = function(item) return item == 'Ann' and '<filtered>' or item end
+        assert.equals(inspect(names, {process = filterAnn}), '{ "Andrew", "Peter", "<filtered>" }')
+      end)
+
+      it('can nullify metatables', function()
+        local mt       = {'world'}
+        local t        = setmetatable({'hello'}, mt)
+        local removeMt = function(item) if item ~= mt then return item end end
+        assert.equals(inspect(t, {process = removeMt}), '{ "hello" }')
+      end)
+
+      it('can nullify metatables via their paths', function()
+        local mt       = {'world'}
+        local t        = setmetatable({'hello'}, mt)
+        local removeMt = function(item, path) if path[#path] ~= '<metatable>' then return item end end
+        assert.equals(inspect(t, {process = removeMt}), '{ "hello" }')
+      end)
+
+      it('can nullify the root object', function()
+        local names     = {'Andrew', 'Peter', 'Ann' }
+        local removeNames = function(item) if item ~= names then return item end end
+        assert.equals(inspect(names, {process = removeNames}), 'nil')
+      end)
+
+    end)
+
     describe('metatables', function()
 
       it('includes the metatable as an extra hash attribute', function()

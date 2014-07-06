@@ -143,12 +143,32 @@ local function makePath(path, key)
   return newPath
 end
 
+local processRecursive = function(object, path, process)
+  local processed = process(object, path)
+  if type(processed) == 'table' then
+    local processed2 = {}
+
+    for k,v in pairs(processed) do
+      processed2[k] = process(v, makePath(path, k), process)
+    end
+
+    local mt  = process(getmetatable(processed), makePath(path, '<metatable>'))
+    setmetatable(processed2, mt)
+    processed = processed2
+  end
+  return processed
+end
+
 -------------------------------------------------------------------
-function inspect.inspect(rootObject, options)
+function inspect.inspect(root, options)
   options       = options or {}
   local depth   = options.depth or math.huge
+  local process = options.process
+  if process then
+    root = processRecursive(root, {}, process)
+  end
 
-  local tableAppearances = countTableAppearances(rootObject)
+  local tableAppearances = countTableAppearances(root)
 
   local buffer = {}
   local maxIds = setmetatable({}, maxIdsMetaTable)
@@ -203,7 +223,7 @@ function inspect.inspect(rootObject, options)
     puts("]")
   end
 
-  local function putTable(t, path)
+  local function putTable(t)
     if alreadyVisited(t) then
       puts('<table ', getId(t), '>')
     elseif level >= depth then
@@ -227,7 +247,7 @@ function inspect.inspect(rootObject, options)
         for i=1, length do
           needsComma = commaControl(needsComma)
           puts(' ')
-          putValue(t[i], makePath(path, i))
+          putValue(t[i])
         end
 
         for _,k in ipairs(dictKeys) do
@@ -235,14 +255,14 @@ function inspect.inspect(rootObject, options)
           tabify()
           putKey(k)
           puts(' = ')
-          putValue(t[k], makePath(path, k))
+          putValue(t[k])
         end
 
         if mt then
           needsComma = commaControl(needsComma)
           tabify()
           puts('<metatable> = ')
-          putValue(mt, makePath(path, '<metatable>'))
+          putValue(mt)
         end
       end)
 
@@ -258,7 +278,7 @@ function inspect.inspect(rootObject, options)
   end
 
   -- putvalue is forward-declared before putTable & putKey
-  putValue = function(v, path)
+  putValue = function(v)
     local tv = type(v)
 
     if tv == 'string' then
@@ -266,13 +286,13 @@ function inspect.inspect(rootObject, options)
     elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
       puts(tostring(v))
     elseif tv == 'table' then
-      putTable(v, path)
+      putTable(v)
     else
       puts('<',tv,' ',getId(v),'>')
     end
   end
 
-  putValue(rootObject, {})
+  putValue(root, {})
 
   return table.concat(buffer)
 end
