@@ -220,6 +220,27 @@ describe( 'inspect', function()
         assert.equals(inspect(names, {process = removeNames}), 'nil')
       end)
 
+      it('changes keys', function()
+        local dict = {a = 1}
+        local changeKey = function(item, path) return item == 'a' and 'x' or item end
+        assert.equals(inspect(dict, {process = changeKey}), '{\n  x = 1\n}')
+      end)
+
+      it('nullifies keys', function()
+        local dict = {a = 1, b = 2}
+        local removeA = function(item, path) return item ~= 'a' and item or nil end
+        assert.equals(inspect(dict, {process = removeA}), '{\n  b = 2\n}')
+      end)
+
+      it('marks key paths with <key>', function()
+        local names = {a = 1}
+        local paths = {}
+        local addPath = function(item, path) paths[#paths + 1] = path; return item end
+
+        inspect(names, {process = addPath})
+
+        assert.same(paths, { {}, {'<key>'}, {'a'} })
+      end)
     end)
 
     describe('metatables', function()

@@ -136,23 +136,34 @@ local function countTableAppearances(t, tableAppearances)
   return tableAppearances
 end
 
+local copySequence = function(s)
+  local copy, len = {}, #s
+  for i=1, len do copy[i] = copy[i] end
+  return copy, len
+end
+
 local function makePath(path, key)
-  local newPath, len = {}, #path
-  for i=1, len do newPath[i] = path[i] end
-  newPath[len+1] = key
+  local newPath, len = copySequence(path)
+  newPath[len + 1] = key
   return newPath
 end
 
-local function processRecursive(object, path, process)
-  local processed = process(object, path)
+local function processRecursive(process, item, path)
+  if item == nil then return nil end
+
+  local processed = process(item, path)
   if type(processed) == 'table' then
     local processedCopy = {}
+    local processedKey
 
     for k,v in pairs(processed) do
-      processedCopy[k] = processRecursive(v, makePath(path, k), process)
+      processedKey                = processRecursive(process, k, makePath(path, '<key>'))
+      if processedKey ~= nil then
+        processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey))
+      end
     end
 
-    local mt  = processRecursive(getmetatable(processed), makePath(path, '<metatable>'), process)
+    local mt  = processRecursive(process, getmetatable(processed), makePath(path, '<metatable>'))
     setmetatable(processedCopy, mt)
     processed = processedCopy
   end
@@ -165,7 +176,7 @@ function inspect.inspect(root, options)
   local depth   = options.depth or math.huge
   local process = options.process
   if process then
-    root = processRecursive(root, {}, process)
+    root = processRecursive(process, root, {})
   end
 
   local tableAppearances = countTableAppearances(root)
