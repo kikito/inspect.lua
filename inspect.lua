@@ -143,18 +143,18 @@ local function makePath(path, key)
   return newPath
 end
 
-local processRecursive = function(object, path, process)
+local function processRecursive(object, path, process)
   local processed = process(object, path)
   if type(processed) == 'table' then
-    local processed2 = {}
+    local processedCopy = {}
 
     for k,v in pairs(processed) do
-      processed2[k] = process(v, makePath(path, k), process)
+      processedCopy[k] = processRecursive(v, makePath(path, k), process)
     end
 
-    local mt  = process(getmetatable(processed), makePath(path, '<metatable>'))
-    setmetatable(processed2, mt)
-    processed = processed2
+    local mt  = processRecursive(getmetatable(processed), makePath(path, '<metatable>'), process)
+    setmetatable(processedCopy, mt)
+    processed = processedCopy
   end
   return processed
 end
