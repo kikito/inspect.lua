@@ -170,7 +170,128 @@ local function processRecursive(process, item, path)
   return processed
 end
 
+
 -------------------------------------------------------------------
+
+local Inspector = {}
+local Inspector_mt = {__index = Inspector}
+
+function Inspector:puts(...)
+  local args   = {...}
+  local buffer = self.buffer
+  local len    = #buffer
+  for i=1, #args do
+    len = len + 1
+    buffer[len] = tostring(args[i])
+  end
+end
+
+function Inspector:down(f)
+  self.level = self.level + 1
+  f()
+  self.level = self.level - 1
+end
+
+function Inspector:tabify()
+  self:puts("\n", string.rep("  ", self.level))
+end
+
+function Inspector:commaControl(needsComma)
+  if needsComma then self:puts(',') end
+  return true
+end
+
+function Inspector:alreadyVisited(v)
+  return self.ids[type(v)][v] ~= nil
+end
+
+function Inspector:getId(v)
+  local tv = type(v)
+  local id = self.ids[tv][v]
+  if not id then
+    id              = self.maxIds[tv] + 1
+    self.maxIds[tv] = id
+    self.ids[tv][v] = id
+  end
+  return id
+end
+
+function Inspector:putKey(k)
+  if isIdentifier(k) then return self:puts(k) end
+  self:puts("[")
+  self:putValue(k)
+  self:puts("]")
+end
+
+function Inspector:putTable(t)
+  if self:alreadyVisited(t) then
+    self:puts('<table ', self:getId(t), '>')
+  elseif self.level >= self.depth then
+    self:puts('{...}')
+  else
+    if self.tableAppearances[t] > 1 then self:puts('<', self:getId(t), '>') end
+
+    local dictKeys          = getDictionaryKeys(t)
+    local length            = #t
+    local mt                = getmetatable(t)
+    local to_string_result  = getToStringResultSafely(t, mt)
+
+    self:puts('{')
+    self:down(function()
+      if to_string_result then
+        self:puts(' -- ', escape(to_string_result))
+        if length >= 1 then self:tabify() end
+      end
+
+      local needsComma = false
+      for i=1, length do
+        needsComma = self:commaControl(needsComma)
+        self:puts(' ')
+        self:putValue(t[i])
+      end
+
+      for _,k in ipairs(dictKeys) do
+        needsComma = self:commaControl(needsComma)
+        self:tabify()
+        self:putKey(k)
+        self:puts(' = ')
+        self:putValue(t[k])
+      end
+
+      if mt then
+        needsComma = self:commaControl(needsComma)
+        self:tabify()
+        self:puts('<metatable> = ')
+        self:putValue(mt)
+      end
+    end)
+
+    if #dictKeys > 0 or mt then -- dictionary table. Justify closing }
+      self:tabify()
+    elseif length > 0 then -- array tables have one extra space before closing }
+      self:puts(' ')
+    end
+
+    self:puts('}')
+  end
+end
+
+function Inspector:putValue(v)
+  local tv = type(v)
+
+  if tv == 'string' then
+    self:puts(smartQuote(escape(v)))
+  elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
+    self:puts(tostring(v))
+  elseif tv == 'table' then
+    self:putTable(v)
+  else
+    self:puts('<',tv,' ',self:getId(v),'>')
+  end
+end
+
+-------------------------------------------------------------------
+
 function inspect.inspect(root, options)
   options       = options or {}
   local depth   = options.depth or math.huge
@@ -179,133 +300,18 @@ function inspect.inspect(root, options)
     root = processRecursive(process, root, {})
   end
 
-  local tableAppearances = countTableAppearances(root)
+  local inspector = setmetatable({
+    depth            = depth,
+    buffer           = {},
+    level            = 0,
+    ids              = setmetatable({}, idsMetaTable),
+    maxIds           = setmetatable({}, maxIdsMetaTable),
+    tableAppearances = countTableAppearances(root)
+  }, Inspector_mt)
 
-  local buffer = {}
-  local maxIds = setmetatable({}, maxIdsMetaTable)
-  local ids    = setmetatable({}, idsMetaTable)
-  local level  = 0
-  local blen   = 0 -- buffer length
+  inspector:putValue(root)
 
-  local function puts(...)
-    local args = {...}
-    for i=1, #args do
-      blen = blen + 1
-      buffer[blen] = tostring(args[i])
-    end
-  end
-
-  local function down(f)
-    level = level + 1
-    f()
-    level = level - 1
-  end
-
-  local function tabify()
-    puts("\n", string.rep("  ", level))
-  end
-
-  local function commaControl(needsComma)
-    if needsComma then puts(',') end
-    return true
-  end
-
-  local function alreadyVisited(v)
-    return ids[type(v)][v] ~= nil
-  end
-
-  local function getId(v)
-    local tv = type(v)
-    local id = ids[tv][v]
-    if not id then
-      id         = maxIds[tv] + 1
-      maxIds[tv] = id
-      ids[tv][v] = id
-    end
-    return id
-  end
-
-  local putValue -- forward declaration that needs to go before putTable & putKey
-
-  local function putKey(k)
-    if isIdentifier(k) then return puts(k) end
-    puts( "[" )
-    putValue(k, {})
-    puts("]")
-  end
-
-  local function putTable(t)
-    if alreadyVisited(t) then
-      puts('<table ', getId(t), '>')
-    elseif level >= depth then
-      puts('{...}')
-    else
-      if tableAppearances[t] > 1 then puts('<', getId(t), '>') end
-
-      local dictKeys          = getDictionaryKeys(t)
-      local length            = #t
-      local mt                = getmetatable(t)
-      local to_string_result  = getToStringResultSafely(t, mt)
-
-      puts('{')
-      down(function()
-        if to_string_result then
-          puts(' -- ', escape(to_string_result))
-          if length >= 1 then tabify() end -- tabify the array values
-        end
-
-        local needsComma = false
-        for i=1, length do
-          needsComma = commaControl(needsComma)
-          puts(' ')
-          putValue(t[i])
-        end
-
-        for _,k in ipairs(dictKeys) do
-          needsComma = commaControl(needsComma)
-          tabify()
-          putKey(k)
-          puts(' = ')
-          putValue(t[k])
-        end
-
-        if mt then
-          needsComma = commaControl(needsComma)
-          tabify()
-          puts('<metatable> = ')
-          putValue(mt)
-        end
-      end)
-
-      if #dictKeys > 0 or mt then -- dictionary table. Justify closing }
-        tabify()
-      elseif length > 0 then -- array tables have one extra space before closing }
-        puts(' ')
-      end
-
-      puts('}')
-    end
-
-  end
-
-  -- putvalue is forward-declared before putTable & putKey
-  putValue = function(v)
-    local tv = type(v)
-
-    if tv == 'string' then
-      puts(smartQuote(escape(v)))
-    elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
-      puts(tostring(v))
-    elseif tv == 'table' then
-      putTable(v)
-    else
-      puts('<',tv,' ',getId(v),'>')
-    end
-  end
-
-  putValue(root, {})
-
-  return table.concat(buffer)
+  return table.concat(inspector.buffer)
 end
 
 setmetatable(inspect, { __call = function(_, ...) return inspect.inspect(...) end })
