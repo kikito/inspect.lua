@@ -1,5 +1,6 @@
-local inspect = require 'inspect'
-local is_luajit, ffi = pcall(require, 'ffi')
+local inspect         = require 'inspect'
+local unindent        = require 'spec.unindent'
+local is_luajit, ffi  = pcall(require, 'ffi')
 
 describe( 'inspect', function()
 
@@ -82,41 +83,45 @@ describe( 'inspect', function()
     it('sorts keys in dictionary tables', function()
       local t = { 1,2,3,
         [print] = 1, ["buy more"] = 1, a = 1,
+        [coroutine.create(function() end)] = 1,
         [14] = 1, [{c=2}] = 1, [true]= 1
       }
-      local s = [[{ 1, 2, 3,
-  [14] = 1,
-  [true] = 1,
-  a = 1,
-  ["buy more"] = 1,
-  [{
-    c = 2
-  }] = 1,
-  [<function 1>] = 1]]
-      if is_luajit then
-	    t[ffi.new("int", 1)] = 1
-		s = s .. ",\n  [<cdata 1>] = 1"
-      end
-      assert.equals(inspect(t), s .. "\n}")
+      assert.equals(inspect(t), unindent([[
+        { 1, 2, 3,
+          [14] = 1,
+          [true] = 1,
+          a = 1,
+          ["buy more"] = 1,
+          [{
+            c = 2
+          }] = 1,
+          [<function 1>] = 1,
+          [<thread 1>] = 1
+        }
+      ]]))
     end)
 
     it('works with nested dictionary tables', function()
-      assert.equals(inspect( {d=3, b={c=2}, a=1} ), [[{
-  a = 1,
-  b = {
-    c = 2
-  },
-  d = 3
-}]])
+      assert.equals(inspect( {d=3, b={c=2}, a=1} ), unindent([[{
+        a = 1,
+        b = {
+          c = 2
+        },
+        d = 3
+      }]]))
     end)
 
     it('works with hybrid tables', function()
-      assert.equals(inspect({ 'a', {b = 1}, 2, c = 3, ['ahoy you'] = 4 }), [[{ "a", {
-    b = 1
-  }, 2,
-  ["ahoy you"] = 4,
-  c = 3
-}]])
+      assert.equals(
+        inspect({ 'a', {b = 1}, 2, c = 3, ['ahoy you'] = 4 }),
+        unindent([[
+          { "a", {
+            b = 1
+          }, 2,
+          ["ahoy you"] = 4,
+          c = 3
+        }
+        ]]))
     end)
 
     it('displays <table x> instead of repeating an already existing table', function()
@@ -133,50 +138,62 @@ describe( 'inspect', function()
       local keys = { [level5] = true }
 
       it('has infinite depth by default', function()
-        assert.equals(inspect(level5), [[{ 1, 2, 3,
-  a = {
-    b = {
-      c = {
-        d = {
-          e = 5
-        }
-      }
-    }
-  }
-}]])
+        assert.equals(inspect(level5), unindent([[
+          { 1, 2, 3,
+            a = {
+              b = {
+                c = {
+                  d = {
+                    e = 5
+                  }
+                }
+              }
+            }
+          }
+        ]]))
       end)
       it('is modifiable by the user', function()
-        assert.equals(inspect(level5, {depth = 2}), [[{ 1, 2, 3,
-  a = {
-    b = {...}
-  }
-}]])
-        assert.equals(inspect(level5, {depth = 1}), [[{ 1, 2, 3,
-  a = {...}
-}]])
-        assert.equals(inspect(level5, {depth = 0}), "{...}")
-        assert.equals(inspect(level5, {depth = 4}), [[{ 1, 2, 3,
-  a = {
-    b = {
-      c = {
-        d = {...}
-      }
-    }
-  }
-}]])
+        assert.equals(inspect(level5, {depth = 2}), unindent([[
+          { 1, 2, 3,
+            a = {
+              b = {...}
+            }
+          }
+        ]]))
 
+        assert.equals(inspect(level5, {depth = 1}), unindent([[
+          { 1, 2, 3,
+            a = {...}
+          }
+        ]]))
+
+        assert.equals(inspect(level5, {depth = 4}), unindent([[
+          { 1, 2, 3,
+            a = {
+              b = {
+                c = {
+                  d = {...}
+                }
+              }
+            }
+          }
+        ]]))
+
+        assert.equals(inspect(level5, {depth = 0}), "{...}")
       end)
 
       it('respects depth on keys', function()
-        assert.equals(inspect(keys, {depth = 4}), [[{
-  [{ 1, 2, 3,
-    a = {
-      b = {
-        c = {...}
-      }
-    }
-  }] = true
-}]])
+        assert.equals(inspect(keys, {depth = 4}), unindent([[
+          {
+            [{ 1, 2, 3,
+              a = {
+                b = {
+                  c = {...}
+                }
+              }
+            }] = true
+          }
+        ]]))
       end)
     end)
 
@@ -248,58 +265,67 @@ describe( 'inspect', function()
       it('includes the metatable as an extra hash attribute', function()
         local foo = { foo = 1, __mode = 'v' }
         local bar = setmetatable({a = 1}, foo)
-        assert.equals(inspect(bar), [[{
-  a = 1,
-  <metatable> = {
-    __mode = "v",
-    foo = 1
-  }
-}]])
+        assert.equals(inspect(bar), unindent([[
+          {
+            a = 1,
+            <metatable> = {
+              __mode = "v",
+              foo = 1
+            }
+          }
+        ]]))
       end)
 
       it('includes the __tostring metamethod if it exists', function()
         local foo = { foo = 1, __tostring = function() return 'hello\nworld' end }
         local bar = setmetatable({a = 1}, foo)
-        assert.equals(inspect(bar), [[{ -- hello\nworld
-  a = 1,
-  <metatable> = {
-    __tostring = <function 1>,
-    foo = 1
-  }
-}]])
+        assert.equals(inspect(bar), unindent([[
+          { -- hello\nworld
+            a = 1,
+            <metatable> = {
+              __tostring = <function 1>,
+              foo = 1
+            }
+          }
+        ]]))
       end)
 
       it('includes an error string if __tostring metamethod throws an error', function()
         local foo = { foo = 1, __tostring = function() error('hello', 0) end }
         local bar = setmetatable({a = 1}, foo)
-        assert.equals(inspect(bar), [[{ -- error: hello
-  a = 1,
-  <metatable> = {
-    __tostring = <function 1>,
-    foo = 1
-  }
-}]])
+        assert.equals(inspect(bar), unindent([[
+          { -- error: hello
+            a = 1,
+            <metatable> = {
+              __tostring = <function 1>,
+              foo = 1
+            }
+          }
+        ]]))
       end)
 
       describe('When a table is its own metatable', function()
         it('accepts a table that is its own metatable without stack overflowing', function()
           local x = {}
           setmetatable(x,x)
-          assert.equals(inspect(x), [[<1>{
-  <metatable> = <table 1>
-}]])
+          assert.equals(inspect(x), unindent([[
+            <1>{
+              <metatable> = <table 1>
+            }
+          ]]))
         end)
 
         it('can invoke the __tostring method without stack overflowing', function()
           local t = {}
           t.__index = t
           setmetatable(t,t)
-          assert.equals(inspect(t), [[<1>{
-  __index = <table 1>,
-  <metatable> = <table 1>
-}]])
+          assert.equals(inspect(t), unindent([[
+            <1>{
+              __index = <table 1>,
+              <metatable> = <table 1>
+            }
+          ]]))
         end)
-
       end)
     end)
   end)
