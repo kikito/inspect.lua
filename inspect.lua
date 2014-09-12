@@ -138,13 +138,16 @@ end
 
 local copySequence = function(s)
   local copy, len = {}, #s
-  for i=1, len do copy[i] = copy[i] end
+  for i=1, len do copy[i] = s[i] end
   return copy, len
 end
 
-local function makePath(path, key)
+local function makePath(path, ...)
+  local keys = {...}
   local newPath, len = copySequence(path)
-  newPath[len + 1] = key
+  for i=1, #keys do
+    newPath[len + i] = keys[i]
+  end
   return newPath
 end
 
@@ -157,7 +160,7 @@ local function processRecursive(process, item, path)
     local processedKey
 
     for k,v in pairs(processed) do
-      processedKey                = processRecursive(process, k, makePath(path, '<key>'))
+      processedKey = processRecursive(process, k, makePath(path, k, '<key>'))
       if processedKey ~= nil then
         processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey))
       end

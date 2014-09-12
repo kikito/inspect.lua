@@ -249,14 +249,30 @@ describe( 'inspect', function()
         assert.equals(inspect(dict, {process = removeA}), '{\n  b = 2\n}')
       end)
 
-      it('marks key paths with <key>', function()
-        local names = {a = 1}
-        local paths = {}
-        local addPath = function(item, path) paths[#paths + 1] = path; return item end
+      it('marks key paths with <key> and metatables with <metatable>', function()
+        local t = { [{a=1}] = setmetatable({b=2}, {c=3}) }
 
-        inspect(names, {process = addPath})
+        local items = {}
+        local addItem = function(item, path)
+          items[#items + 1] = {item = item, path = path}
+          return item
+        end
 
-        assert.same(paths, { {}, {'<key>'}, {'a'} })
+        inspect(t, {process = addItem})
+
+        assert.same(items, {
+          {item = t,                           path = {}},
+          {item = {a=1},                       path = {{a=1}, '<key>'}},
+          {item = 'a',                         path = {{a=1}, '<key>', 'a', '<key>'}},
+          {item = 1,                           path = {{a=1}, '<key>', 'a'}},
+          {item = setmetatable({b=2}, {c=3}),  path = {{a=1}}},
+          {item = 'b',                         path = {{a=1}, 'b', '<key>'}},
+          {item = 2,                           path = {{a=1}, 'b'}},
+          {item = {c=3},                       path = {{a=1}, '<metatable>'}},
+          {item = 'c',                         path = {{a=1}, '<metatable>', 'c', '<key>'}},
+          {item = 3,                           path = {{a=1}, '<metatable>', 'c'}}
+        })
+
       end)
     end)
 
