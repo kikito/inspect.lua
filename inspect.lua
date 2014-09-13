@@ -199,7 +199,7 @@ function Inspector:down(f)
 end
 
 function Inspector:tabify()
-  self:puts("\n", string.rep("  ", self.level))
+  self:puts(self.newline, string.rep(self.indent, self.level))
 end
 
 function Inspector:commaControl(needsComma)
@@ -304,6 +304,8 @@ function inspect.inspect(root, options)
   options       = options or {}
   local depth   = options.depth or math.huge
   local process = options.process
+  local newline = options.newline or '\n'
+  local indent  = options.indent  or '  '
   if process then
     root = processRecursive(process, root, {})
   end
@@ -314,6 +316,8 @@ function inspect.inspect(root, options)
     level            = 0,
     ids              = setmetatable({}, idsMetaTable),
     maxIds           = setmetatable({}, maxIdsMetaTable),
+    newline          = newline,
+    indent           = indent,
     tableAppearances = countTableAppearances(root)
   }, Inspector_mt)
 

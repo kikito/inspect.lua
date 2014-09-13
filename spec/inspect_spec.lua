@@ -197,6 +197,22 @@ describe( 'inspect', function()
       end)
     end)
 
+    describe('the newline option', function()
+      it('changes the substring used for newlines', function()
+        local t = {a={b=1}}
+
+        assert.equal(inspect(t, {newline='@'}), "{@  a = {@    b = 1@  }@}")
+      end)
+    end)
+
+    describe('the indent option', function()
+      it('changes the substring used for indenting', function()
+        local t = {a={b=1}}
+
+        assert.equal(inspect(t, {indent='>>>'}), "{\n>>>a = {\n>>>>>>b = 1\n>>>}\n}")
+      end)
+    end)
+
     describe('the process option', function()
 
       it('removes one element', function()
