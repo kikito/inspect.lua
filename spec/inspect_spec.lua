@@ -227,7 +227,7 @@ describe( 'inspect', function()
       it('nullifies metatables using their paths', function()
         local mt       = {'world'}
         local t        = setmetatable({'hello'}, mt)
-        local removeMt = function(item, path) if path[#path] ~= '<metatable>' then return item end end
+        local removeMt = function(item, path) if path[#path] ~= inspect.METATABLE then return item end end
         assert.equals(inspect(t, {process = removeMt}), '{ "hello" }')
       end)
 
@@ -249,7 +249,12 @@ describe( 'inspect', function()
         assert.equals(inspect(dict, {process = removeA}), '{\n  b = 2\n}')
       end)
 
-      it('marks key paths with <key> and metatables with <metatable>', function()
+      it('prints inspect.KEY & inspect.METATABLE', function()
+        local t = {inspect.KEY, inspect.METATABLE}
+        assert.equals(inspect(t), "{ inspect.KEY, inspect.METATABLE }")
+      end)
+
+      it('marks key paths with inspect.KEY and metatables with inspect.METATABLE', function()
         local t = { [{a=1}] = setmetatable({b=2}, {c=3}) }
 
         local items = {}
@@ -262,15 +267,15 @@ describe( 'inspect', function()
 
         assert.same(items, {
           {item = t,                           path = {}},
-          {item = {a=1},                       path = {{a=1}, '<key>'}},
-          {item = 'a',                         path = {{a=1}, '<key>', 'a', '<key>'}},
-          {item = 1,                           path = {{a=1}, '<key>', 'a'}},
+          {item = {a=1},                       path = {{a=1}, inspect.KEY}},
+          {item = 'a',                         path = {{a=1}, inspect.KEY, 'a', inspect.KEY}},
+          {item = 1,                           path = {{a=1}, inspect.KEY, 'a'}},
           {item = setmetatable({b=2}, {c=3}),  path = {{a=1}}},
-          {item = 'b',                         path = {{a=1}, 'b', '<key>'}},
+          {item = 'b',                         path = {{a=1}, 'b', inspect.KEY}},
           {item = 2,                           path = {{a=1}, 'b'}},
-          {item = {c=3},                       path = {{a=1}, '<metatable>'}},
-          {item = 'c',                         path = {{a=1}, '<metatable>', 'c', '<key>'}},
-          {item = 3,                           path = {{a=1}, '<metatable>', 'c'}}
+          {item = {c=3},                       path = {{a=1}, inspect.METATABLE}},
+          {item = 'c',                         path = {{a=1}, inspect.METATABLE, 'c', inspect.KEY}},
+          {item = 3,                           path = {{a=1}, inspect.METATABLE, 'c'}}
         })
 
       end)

@@ -28,6 +28,9 @@ local inspect ={
   ]]
 }
 
+inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
+inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
+
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
 local function smartQuote(str)
@@ -160,13 +163,13 @@ local function processRecursive(process, item, path)
     local processedKey
 
     for k,v in pairs(processed) do
-      processedKey = processRecursive(process, k, makePath(path, k, '<key>'))
+      processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY))
       if processedKey ~= nil then
         processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey))
       end
     end
 
-    local mt  = processRecursive(process, getmetatable(processed), makePath(path, '<metatable>'))
+    local mt  = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE))
     setmetatable(processedCopy, mt)
     processed = processedCopy
   end
@@ -227,7 +230,9 @@ function Inspector:putKey(k)
 end
 
 function Inspector:putTable(t)
-  if self:alreadyVisited(t) then
+  if t == inspect.KEY or t == inspect.METATABLE then
+    self:puts(tostring(t))
+  elseif self:alreadyVisited(t) then
     self:puts('<table ', self:getId(t), '>')
   elseif self.level >= self.depth then
     self:puts('{...}')

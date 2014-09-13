@@ -139,10 +139,10 @@ local processed_item = function(item, path)
 * `path` is an array-like table built with all the keys that have been used to reach `item`, from the root.
   * For values, it is just a regular list of keys. For example, to reach the 1 in `{a = {b = 1}}`, the `path`
     will be `{'a', 'b'}`
-  * For keys, a special value called `<key>` is inserted. For example, to reach the `c` in `{a = {b = {c = 1}}}`,
-    the path will be `{'a', 'b', 'c', '<key>' }`
-  * For metatables, a special value called `<metatable>` is inserted. For `{a = {b = 1}}}`, the path
-    `{'a', 'b', '<metatable>'}` means "the metatable of the table `{b = 1}`".
+  * For keys, the special value `inspect.KEY` is inserted. For example, to reach the `c` in `{a = {b = {c = 1}}}`,
+    the path will be `{'a', 'b', 'c', inspect.KEY }`
+  * For metatables, the special value `inspect.METATABLE` is inserted. For `{a = {b = 1}}}`, the path
+    `{'a', {b = 1}, inspect.METATABLE}` means "the metatable of the table `{b = 1}`".
 * `processed_item` is the value returned by `options.process`. If it is equal to `item`, then the inspected
   table will look unchanged. If it is different, then the table will look different; most notably, if it's `nil`,
   the item will dissapear on the inspected table.
