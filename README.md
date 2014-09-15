@@ -182,17 +182,17 @@ end
 assert(inspect(t, {process = remove_mt}) == "{ 1, 2, 3 }")
 ```
 
-The previous exaple only works for a particular metatable. If you want to make *all* metatables, you can use `path`:
+The previous exaple only works for a particular metatable. If you want to make *all* metatables, you can use the `path` parameter to check
+wether the last element is `inspect.METATABLE`, and return `nil` instead of the item:
 
 ``` lua
 local t, mt = ... -- (defined as before)
 
 local remove_all_metatables = function(item, path)
-  if path[#path] ~= '<metatable>' then return item end
+  if path[#path] ~= inspect.METATABLE then return item end
 end
 
--- Removes all metatables
-assert(inspect(t, {process = remove_mt}) == "{ 1, 2, 3 }")
+assert(inspect(t, {process = remove_all_metatables}) == "{ 1, 2, 3 }")
 ```
 
 Filter a value:
