@@ -227,7 +227,8 @@ Remember to store the value returned by require somewhere! (I suggest a local va
           -- or --
     table.inspect = require 'inspect'
 
-Also, make sure to read the license file; the text of that license file must appear somewhere in your projects' files.
+Also, make sure to read the license; the text of that license file must appear somewhere in your projects' files. For your convenience, it's
+included at the begining of inspect.lua.
 
 Specs
 =====
@@ -235,5 +236,18 @@ Specs
 This project uses [busted](http://olivinelabs.com/busted/) for its specs. If you want to run the specs, you will have to install busted first. Then just execute the following from the root inspect folder:
 
     busted
+
+Change log
+==========
+
+## v3.0
+
+The basic functionality remains as before, but there's one backwards-incompatible change if you used `options.filter`.
+
+* **Removed** `options.filter`
+* **Added** `options.process`, which can be used to do the same as `options.filter`, and more.
+* **Added** two new constants, `inspect.METATABLE` and `inspect.KEY`
+* **Added** `options.indent` & `options.newline`.
+
 
 
