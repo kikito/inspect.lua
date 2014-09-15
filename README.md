@@ -211,40 +211,6 @@ assert(inspect(info, {process = anonymize_password}) == [[{
 }]])
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Sometimes it might be convenient to "filter out" some parts of the output. The `options.filter` option can do that.
-
-`options.filter` accepts a table of values. Any value on that table will be rendered as `<filtered>`. This is useful for hiding things like long complex tables that are not interesting for the task at hand, for example an unuseful complex metatable.
-
-    local person = {name = 'peter'}
-    setmetatable(person, complex_mt)
-    inspect(x, {filter = {complex_mt}}) == [[{
-      name = "peter",
-      <metatable> = <filtered>
-    }]]
-
-`options.filter` can also be a function. The function must return true for the values that must be filtered out.
-
-    local isEvenNumber = function(x) return type(x) == 'number' and x % 2 == 0 end
-
-    inspect({1,2,3,4,5}, {filter = isEvenNumber}) == "{ 1, <filtered>, 3, <filtered>, 5 }"
-
-
 Gotchas / Warnings
 ==================
 
