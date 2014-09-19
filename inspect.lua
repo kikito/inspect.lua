@@ -202,11 +202,6 @@ function Inspector:tabify()
   self:puts(self.newline, string.rep(self.indent, self.level))
 end
 
-function Inspector:commaControl(needsComma)
-  if needsComma then self:puts(',') end
-  return true
-end
-
 function Inspector:alreadyVisited(v)
   return self.ids[type(v)][v] ~= nil
 end
@@ -251,26 +246,29 @@ function Inspector:putTable(t)
         if length >= 1 then self:tabify() end
       end
 
-      local needsComma = false
+      local count = 0
       for i=1, length do
-        needsComma = self:commaControl(needsComma)
+        if count > 0 then self:puts(',') end
         self:puts(' ')
         self:putValue(t[i])
+        count = count + 1
       end
 
       for _,k in ipairs(dictKeys) do
-        needsComma = self:commaControl(needsComma)
+        if count > 0 then self:puts(',') end
         self:tabify()
         self:putKey(k)
         self:puts(' = ')
         self:putValue(t[k])
+        count = count + 1
       end
 
       if mt then
-        needsComma = self:commaControl(needsComma)
+        if count > 0 then self:puts(',') end
         self:tabify()
         self:puts('<metatable> = ')
         self:putValue(mt)
+        count = count + 1
       end
     end)
 
@@ -302,10 +300,12 @@ end
 
 function inspect.inspect(root, options)
   options       = options or {}
-  local depth   = options.depth or math.huge
-  local process = options.process
+
+  local depth   = options.depth   or math.huge
   local newline = options.newline or '\n'
   local indent  = options.indent  or '  '
+  local process = options.process
+
   if process then
     root = processRecursive(process, root, {})
   end
