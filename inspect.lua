@@ -236,12 +236,12 @@ function Inspector:putTable(t)
     local nonSequentialKeys = getNonSequentialKeys(t)
     local length            = #t
     local mt                = getmetatable(t)
-    local to_string_result  = getToStringResultSafely(t, mt)
+    local toStringResult    = getToStringResultSafely(t, mt)
 
     self:puts('{')
     self:down(function()
-      if to_string_result then
-        self:puts(' -- ', escape(to_string_result))
+      if toStringResult then
+        self:puts(' -- ', escape(toStringResult))
         if length >= 1 then self:tabify() end
       end
 
