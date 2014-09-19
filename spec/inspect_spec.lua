@@ -80,6 +80,11 @@ describe( 'inspect', function()
       assert.equals(inspect({a = 1, b = 2}), "{\n  a = 1,\n  b = 2\n}")
     end)
 
+    it('identifies numeric non-array keys as dictionary keys', function()
+      assert.equals(inspect({1, 2, [-1] = true}), "{ 1, 2,\n  [-1] = true\n}")
+      assert.equals(inspect({1, 2, [1.5] = true}), "{ 1, 2,\n  [1.5] = true\n}")
+    end)
+
     it('sorts keys in dictionary tables', function()
       local t = { 1,2,3,
         [print] = 1, ["buy more"] = 1, a = 1,

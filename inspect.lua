@@ -56,12 +56,11 @@ local function isIdentifier(str)
   return type(str) == 'string' and str:match( "^[_%a][_%a%d]*$" )
 end
 
-local function isArrayKey(k, length)
-  return type(k) == 'number' and 1 <= k and k <= length
-end
-
-local function isDictionaryKey(k, length)
-  return not isArrayKey(k, length)
+local function isSequenceKey(k, length)
+  return type(k) == 'number'
+     and 1 <= k
+     and k <= length
+     and math.floor(k) == k
 end
 
 local defaultTypeOrders = {
@@ -86,10 +85,10 @@ local function sortKeys(a, b)
   return ta < tb
 end
 
-local function getDictionaryKeys(t)
+local function getNonSequentialKeys(t)
   local keys, length = {}, #t
   for k,_ in pairs(t) do
-    if isDictionaryKey(k, length) then table.insert(keys, k) end
+    if not isSequenceKey(k, length) then table.insert(keys, k) end
   end
   table.sort(keys, sortKeys)
   return keys
@@ -234,7 +233,7 @@ function Inspector:putTable(t)
   else
     if self.tableAppearances[t] > 1 then self:puts('<', self:getId(t), '>') end
 
-    local dictKeys          = getDictionaryKeys(t)
+    local nonSequentialKeys = getNonSequentialKeys(t)
     local length            = #t
     local mt                = getmetatable(t)
     local to_string_result  = getToStringResultSafely(t, mt)
@@ -254,7 +253,7 @@ function Inspector:putTable(t)
         count = count + 1
       end
 
-      for _,k in ipairs(dictKeys) do
+      for _,k in ipairs(nonSequentialKeys) do
         if count > 0 then self:puts(',') end
         self:tabify()
         self:putKey(k)
@@ -272,7 +271,7 @@ function Inspector:putTable(t)
       end
     end)
 
-    if #dictKeys > 0 or mt then -- dictionary table. Justify closing }
+    if #nonSequentialKeys > 0 or mt then -- result is multi-lined. Justify closing }
       self:tabify()
     elseif length > 0 then -- array tables have one extra space before closing }
       self:puts(' ')
