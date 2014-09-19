@@ -59,10 +59,8 @@ describe( 'inspect', function()
   end)
 
   if is_luajit then
-    describe('luajit cdata', function()
-      it('works with luajit cdata', function()
-        assert.equals(inspect({ ffi.new("int", 1), ffi.typeof("int"), ffi.typeof("int")(1) }), '{ <cdata 1>, <cdata 2>, <cdata 3> }')
-      end)
+    it('works with luajit cdata', function()
+      assert.equals(inspect({ ffi.new("int", 1), ffi.typeof("int"), ffi.typeof("int")(1) }), '{ <cdata 1>, <cdata 2>, <cdata 3> }')
     end)
   end
 
