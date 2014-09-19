@@ -260,13 +260,13 @@ describe( 'inspect', function()
 
       it('changes keys', function()
         local dict = {a = 1}
-        local changeKey = function(item, path) return item == 'a' and 'x' or item end
+        local changeKey = function(item) return item == 'a' and 'x' or item end
         assert.equals(inspect(dict, {process = changeKey}), '{\n  x = 1\n}')
       end)
 
       it('nullifies keys', function()
         local dict = {a = 1, b = 2}
-        local removeA = function(item, path) return item ~= 'a' and item or nil end
+        local removeA = function(item) return item ~= 'a' and item or nil end
         assert.equals(inspect(dict, {process = removeA}), '{\n  b = 2\n}')
       end)
 

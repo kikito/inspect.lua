@@ -267,7 +267,6 @@ function Inspector:putTable(t)
         self:tabify()
         self:puts('<metatable> = ')
         self:putValue(mt)
-        count = count + 1
       end
     end)
 
