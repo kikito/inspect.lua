@@ -3,7 +3,7 @@ inspect.lua
 
 [![Build Status](https://travis-ci.org/kikito/inspect.lua.png?branch=master)](https://travis-ci.org/kikito/inspect.lua)
 
-This function transform any Lua table into a human-readable representation of that table.
+This library transforms any Lua value into a human-readable representation. It is especially useful for debugging errors in tables.
 
 The objective here is human understanding (i.e. for debugging), not serialization or compactness.
 
@@ -219,16 +219,19 @@ This method is *not* appropriate for saving/restoring tables. It is meant to be 
 Installation
 ============
 
-Just copy the inspect.lua file somewhere in your projects (maybe inside a /lib/ folder) and require it accordingly.
+If you are using luarocks, just run
+
+    luarocks install inspect
+
+Otherwise, you can just copy the inspect.lua file somewhere in your projects (maybe inside a /lib/ folder) and require it accordingly.
 
 Remember to store the value returned by require somewhere! (I suggest a local variable named inspect, although others might like table.inspect)
 
     local inspect = require 'inspect'
           -- or --
-    table.inspect = require 'inspect'
+    local inspect = require 'lib.inspect'
 
-Also, make sure to read the license; the text of that license file must appear somewhere in your projects' files. For your convenience, it's
-included at the begining of inspect.lua.
+Also, make sure to read the license; the text of that license file must appear somewhere in your projects' files. For your convenience, it's included at the begining of inspect.lua.
 
 Specs
 =====
