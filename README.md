@@ -124,7 +124,7 @@ assert(inspect(t5, {depth = 2}) == [[{
 
 `options.depth` defaults to infinite (`math.huge`).
 
-### options.newline & options.indent
+#### options.newline & options.indent
 
 These are the strings used by `inspect` to respectively add a newline and indent each level of a table.
 
@@ -142,7 +142,7 @@ assert(inspect(t) == [[{
 assert(inspect(t, {newline='@', indent="++"}), "{@++a = {@++++b = 1@++}@}"
 ```
 
-### options.process
+#### options.process
 
 `options.process` is a function which allow altering the passed object before transforming it into a string.
 A typical way to use it would be to remove certain values so that they don't appear at all.
