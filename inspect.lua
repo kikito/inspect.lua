@@ -1,5 +1,5 @@
 local inspect ={
-  _VERSION = 'inspect.lua 2.0.0',
+  _VERSION = 'inspect.lua 3.0.0',
   _URL     = 'http://github.com/kikito/inspect.lua',
   _DESCRIPTION = 'human-readable representations of tables',
   _LICENSE = [[
