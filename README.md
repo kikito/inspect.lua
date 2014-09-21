@@ -243,14 +243,9 @@ This project uses [busted](http://olivinelabs.com/busted/) for its specs. If you
 Change log
 ==========
 
-## v3.0
+Read it on the CHANGELOG.md file
 
-The basic functionality remains as before, but there's one backwards-incompatible change if you used `options.filter`.
 
-* **Removed** `options.filter`
-* **Added** `options.process`, which can be used to do the same as `options.filter`, and more.
-* **Added** two new constants, `inspect.METATABLE` and `inspect.KEY`
-* **Added** `options.indent` & `options.newline`.
 
 
 
