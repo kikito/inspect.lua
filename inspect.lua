@@ -45,10 +45,8 @@ local controlCharsTranslation = {
   ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v"
 }
 
-local function escapeChar(c) return controlCharsTranslation[c] end
-
 local function escape(str)
-  local result = str:gsub("\\", "\\\\"):gsub("(%c)", escapeChar)
+  local result = str:gsub("\\", "\\\\"):gsub("(%c)", controlCharsTranslation)
   return result
 end
 
