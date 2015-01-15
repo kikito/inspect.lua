@@ -28,6 +28,17 @@ local inspect ={
   ]]
 }
 
+local pairs = pairs
+local ipairs = ipairs
+local type = type
+local math = math
+local tostring = tostring
+local rawset = rawset
+local next = next
+local getmetatable = getmetatable
+local table = table
+local setmetatable = setmetatable
+
 inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
 
