@@ -84,7 +84,7 @@ local function sortKeys(a, b)
 end
 
 local function getNonSequentialKeys(t)
-  local keys, length = {}, #t
+  local keys, length = {}, rawlen(t)
   for k,_ in pairs(t) do
     if not isSequenceKey(k, length) then table.insert(keys, k) end
   end
@@ -232,7 +232,7 @@ function Inspector:putTable(t)
     if self.tableAppearances[t] > 1 then self:puts('<', self:getId(t), '>') end
 
     local nonSequentialKeys = getNonSequentialKeys(t)
-    local length            = #t
+    local length            = rawlen(t)
     local mt                = getmetatable(t)
     local toStringResult    = getToStringResultSafely(t, mt)
 
