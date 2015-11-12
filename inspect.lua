@@ -31,6 +31,19 @@ local inspect ={
 inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
 
+local rawlen = rawlen or function(t)
+  local _M, len = getmetatable(t)
+  if _M then
+    setmetatable(t, {})
+    len = #t
+    setmetatable(t, _M)
+  else
+    len = #t
+  end
+
+  return len
+end
+
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
 local function smartQuote(str)
