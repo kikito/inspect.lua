@@ -32,16 +32,7 @@ inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KE
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
 
 local rawlen = rawlen or function(t)
-  local _M, len = getmetatable(t)
-  if _M then
-    setmetatable(t, {})
-    len = #t
-    setmetatable(t, _M)
-  else
-    len = #t
-  end
-
-  return len
+  return #t
 end
 
 -- Apostrophizes the string if it has quotes, but not aphostrophes
