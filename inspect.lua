@@ -235,7 +235,7 @@ function Inspector:putTable(t)
     if self.tableAppearances[t] > 1 then self:puts('<', self:getId(t), '>') end
 
     local nonSequentialKeys = getNonSequentialKeys(t)
-    local length            = #t
+    local length            = rawlen(t)
     local mt                = getmetatable(t)
     local toStringResult    = getToStringResultSafely(t, mt)
 
