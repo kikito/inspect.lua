@@ -1,6 +1,7 @@
 local inspect         = require 'inspect'
 local unindent        = require 'spec.unindent'
 local is_luajit, ffi  = pcall(require, 'ffi')
+local has_rawlen      = type(_G.rawlen) == 'function'
 
 describe( 'inspect', function()
 
@@ -73,6 +74,13 @@ describe( 'inspect', function()
     it('works with nested arrays', function()
       assert.equals('{ "a", "b", "c", { "d", "e" }, "f" }', inspect({'a','b','c', {'d','e'}, 'f'}))
     end)
+
+    if has_rawlen then
+      it('handles arrays with a __len metatable correctly (ignoring the __len metatable and using rawlen)', function()
+        local arr = setmetatable({1,2,3}, {__len = function() return nil end})
+        assert.equals("{ 1, 2, 3 }", inspect(arr))
+      end)
+    end
 
     it('works with simple dictionary tables', function()
       assert.equals("{\n  a = 1,\n  b = 2\n}", inspect({a = 1, b = 2}))
