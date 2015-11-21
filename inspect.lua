@@ -31,6 +31,9 @@ local inspect ={
 inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
 
+-- returns the length of a table, ignoring __len (if it exists)
+local rawlen = _G.rawlen or function(t) return #t end
+
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
 local function smartQuote(str)
@@ -84,7 +87,7 @@ local function sortKeys(a, b)
 end
 
 local function getNonSequentialKeys(t)
-  local keys, length = {}, #t
+  local keys, length = {}, rawlen(t)
   for k,_ in pairs(t) do
     if not isSequenceKey(k, length) then table.insert(keys, k) end
   end
