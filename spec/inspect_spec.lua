@@ -78,7 +78,7 @@ describe( 'inspect', function()
     if has_rawlen then
       it('handles arrays with a __len metatable correctly (ignoring the __len metatable and using rawlen)', function()
         local arr = setmetatable({1,2,3}, {__len = function() return nil end})
-        assert.equals("{ 1, 2, 3 }", inspect(arr))
+        assert.equals("{ 1, 2, 3,\n  <metatable> = {\n    __len = <function 1>\n  }\n}", inspect(arr))
       end)
     end
 
