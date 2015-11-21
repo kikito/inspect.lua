@@ -1,3 +1,6 @@
+## v3.0.1
+* Fixes a bug when dealing with tables which have a __len metamethod in Lua >= 5.2
+
 ## v3.0.0
 
 The basic functionality remains as before, but there's one backwards-incompatible change if you used `options.filter`.
