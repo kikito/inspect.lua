@@ -31,9 +31,8 @@ local inspect ={
 inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
 
-local rawlen = rawlen or function(t)
-  return #t
-end
+-- returns the length of a table, ignoring __len (if it exists)
+local rawlen = _G.rawlen or function(t) return #t end
 
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
