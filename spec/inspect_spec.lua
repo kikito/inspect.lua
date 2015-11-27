@@ -350,6 +350,31 @@ describe( 'inspect', function()
         ]]), inspect(bar))
       end)
 
+      it('does not allow collecting weak tables while they are being inspected', function()
+        collectgarbage('stop')
+        finally(function() collectgarbage('restart') end)
+        local shimMetatable = {
+          __mode = 'v',
+          __index = function() return {} end,
+          __tostring = function() collectgarbage() return 'shim' end
+        }
+        local function shim() return setmetatable({}, shimMetatable) end
+        local t = shim()
+        t.key = shim()
+        assert.equals(unindent([[
+          { -- shim
+            key = { -- shim
+              <metatable> = <1>{
+                __index = <function 1>,
+                __mode = "v",
+                __tostring = <function 2>
+              }
+            },
+            <metatable> = <table 1>
+          }
+        ]]), inspect(t))
+      end)
+
       describe('When a table is its own metatable', function()
         it('accepts a table that is its own metatable without stack overflowing', function()
           local x = {}

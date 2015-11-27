@@ -114,14 +114,14 @@ local maxIdsMetaTable = {
 
 local idsMetaTable = {
   __index = function (self, typeName)
-    local col = setmetatable({}, {__mode = "kv"})
+    local col = {}
     rawset(self, typeName, col)
     return col
   end
 }
 
 local function countTableAppearances(t, tableAppearances)
-  tableAppearances = tableAppearances or setmetatable({}, {__mode = "k"})
+  tableAppearances = tableAppearances or {}
 
   if type(t) == 'table' then
     if not tableAppearances[t] then
