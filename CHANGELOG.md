@@ -1,3 +1,6 @@
+## v3.0.2
+* Fixes a bug when a table was garbage-collected while inspect was trying to render it
+
 ## v3.0.1
 * Fixes a bug when dealing with tables which have a __len metamethod in Lua >= 5.2
 
