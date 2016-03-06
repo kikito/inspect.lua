@@ -1,3 +1,7 @@
+## v3.0.3
+* Fixes a bug which sometimes displayed struct-like parts of tables as sequence-like due
+  to the way rawlen/the # operator are implemented.
+
 ## v3.0.2
 * Fixes a bug when a table was garbage-collected while inspect was trying to render it
 
