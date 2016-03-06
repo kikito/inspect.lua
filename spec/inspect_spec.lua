@@ -86,6 +86,15 @@ describe( 'inspect', function()
       assert.equals("{\n  a = 1,\n  b = 2\n}", inspect({a = 1, b = 2}))
     end)
 
+    it('identifies tables with no number 1 as struct-like', function()
+      assert.equals(unindent([[{
+          [2] = 1,
+          [25] = 1,
+          id = 1
+        }
+        ]]), inspect({[2]=1,[25]=1,id=1}))
+    end)
+
     it('identifies numeric non-array keys as dictionary keys', function()
       assert.equals("{ 1, 2,\n  [-1] = true\n}", inspect({1, 2, [-1] = true}))
       assert.equals("{ 1, 2,\n  [1.5] = true\n}", inspect({1, 2, [1.5] = true}))
@@ -131,6 +140,8 @@ describe( 'inspect', function()
           c = 3
         }
         ]]), inspect({ 'a', {b = 1}, 2, c = 3, ['ahoy you'] = 4 }))
+
+
     end)
 
     it('displays <table x> instead of repeating an already existing table', function()

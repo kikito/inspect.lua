@@ -31,9 +31,6 @@ local inspect ={
 inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
 
--- returns the length of a table, ignoring __len (if it exists)
-local rawlen = _G.rawlen or function(t) return #t end
-
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
 local function smartQuote(str)
@@ -57,10 +54,10 @@ local function isIdentifier(str)
   return type(str) == 'string' and str:match( "^[_%a][_%a%d]*$" )
 end
 
-local function isSequenceKey(k, length)
+local function isSequenceKey(k, sequenceLength)
   return type(k) == 'number'
      and 1 <= k
-     and k <= length
+     and k <= sequenceLength
      and math.floor(k) == k
 end
 
@@ -86,13 +83,26 @@ local function sortKeys(a, b)
   return ta < tb
 end
 
+-- For implementation reasons, the behavior of rawlen & # is "undefined" when
+-- tables aren't pure sequences. So we implement our own # operator.
+local function getSequenceLength(t)
+  local len = 1
+  local v = rawget(t,len)
+  while v ~= nil do
+    len = len + 1
+    v = rawget(t,len)
+  end
+  return len - 1
+end
+
 local function getNonSequentialKeys(t)
-  local keys, length = {}, rawlen(t)
+  local keys = {}
+  local sequenceLength = getSequenceLength(t)
   for k,_ in pairs(t) do
-    if not isSequenceKey(k, length) then table.insert(keys, k) end
+    if not isSequenceKey(k, sequenceLength) then table.insert(keys, k) end
   end
   table.sort(keys, sortKeys)
-  return keys
+  return keys, sequenceLength
 end
 
 local function getToStringResultSafely(t, mt)
@@ -234,8 +244,7 @@ function Inspector:putTable(t)
   else
     if self.tableAppearances[t] > 1 then self:puts('<', self:getId(t), '>') end
 
-    local nonSequentialKeys = getNonSequentialKeys(t)
-    local length            = rawlen(t)
+    local nonSequentialKeys, sequenceLength = getNonSequentialKeys(t)
     local mt                = getmetatable(t)
     local toStringResult    = getToStringResultSafely(t, mt)
 
@@ -243,11 +252,11 @@ function Inspector:putTable(t)
     self:down(function()
       if toStringResult then
         self:puts(' -- ', escape(toStringResult))
-        if length >= 1 then self:tabify() end
+        if sequenceLength >= 1 then self:tabify() end
       end
 
       local count = 0
-      for i=1, length do
+      for i=1, sequenceLength do
         if count > 0 then self:puts(',') end
         self:puts(' ')
         self:putValue(t[i])
@@ -273,7 +282,7 @@ function Inspector:putTable(t)
 
     if #nonSequentialKeys > 0 or mt then -- result is multi-lined. Justify closing }
       self:tabify()
-    elseif length > 0 then -- array tables have one extra space before closing }
+    elseif sequenceLength > 0 then -- array tables have one extra space before closing }
       self:puts(' ')
     end
 
