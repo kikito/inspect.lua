@@ -2,6 +2,8 @@ inspect.lua
 ===========
 
 [![Build Status](https://travis-ci.org/kikito/inspect.lua.png?branch=master)](https://travis-ci.org/kikito/inspect.lua)
+[![Coverage Status](https://coveralls.io/repos/github/kikito/inspect.lua/badge.svg?branch=master)](https://coveralls.io/github/kikito/inspect.lua?branch=master)
+
 
 This library transforms any Lua value into a human-readable representation. It is especially useful for debugging errors in tables.
 
