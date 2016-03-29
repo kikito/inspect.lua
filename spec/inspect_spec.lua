@@ -38,6 +38,11 @@ describe( 'inspect', function()
        assert.equals('"I have \\b a back space"', inspect('I have \b a back space'))
     end)
 
+    it('escapes zeroes and other control characters properly', function()
+       assert.equals('"I have \\0 zeroes \\0000 and other \\1 control \\0010 characters"', 
+              inspect('I have \0 zeroes \0000 and other \1 control \0010 characters'))
+    end)
+
     it('backslashes its backslashes', function()
        assert.equals('"I have \\\\ a backslash"', inspect('I have \\ a backslash'))
        assert.equals('"I have \\\\\\\\ two backslashes"', inspect('I have \\\\ two backslashes'))
