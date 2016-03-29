@@ -315,6 +315,12 @@ describe( 'inspect', function()
         }, items)
 
       end)
+  
+      it('handles recursive tables correctly', function()
+          local tbl = { 1,2,3}
+          tbl.loop = tbl
+          inspect(tbl, { process=function(x) return x end})
+      end)
     end)
 
     describe('metatables', function()

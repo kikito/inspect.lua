@@ -165,26 +165,35 @@ local function makePath(path, ...)
 end
 
 local function processRecursive(process, item, path)
-  if item == nil then return nil end
+    local visited = {}
+    
+    local function processRecursive2(item, path)
+      if item == nil then return nil end
+      if visited[item] then return visited[item] end
+    
+      local processed = process(item, path)
+      if type(processed) == 'table' then
+        local processedCopy = {}
+        visited[item] = processedCopy
+        local processedKey
 
-  local processed = process(item, path)
-  if type(processed) == 'table' then
-    local processedCopy = {}
-    local processedKey
+        for k,v in pairs(processed) do
+          processedKey = processRecursive2(k, makePath(path, k, inspect.KEY))
+          if processedKey ~= nil then
+            processedCopy[processedKey] = processRecursive2(v, makePath(path, processedKey))
+          end
+        end
 
-    for k,v in pairs(processed) do
-      processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY))
-      if processedKey ~= nil then
-        processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey))
+        local mt  = processRecursive2(getmetatable(processed), makePath(path, inspect.METATABLE))
+        setmetatable(processedCopy, mt)
+        processed = processedCopy
       end
+      return processed
     end
-
-    local mt  = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE))
-    setmetatable(processedCopy, mt)
-    processed = processedCopy
-  end
-  return processed
+    
+    return processRecursive2(item, path)
 end
+
 
 
 -------------------------------------------------------------------
