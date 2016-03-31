@@ -415,11 +415,7 @@ describe( 'inspect', function()
   it('allows changing the global tostring', function()
     local save = _G.tostring
     _G.tostring = function(x) 
-                    if type(x) == "string" then 
-                      return x 
-                    else 
                       return inspect(x) 
-                    end 
                   end
     local s = tostring({1, 2, 3})
     _G.tostring = save    
