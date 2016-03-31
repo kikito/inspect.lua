@@ -41,17 +41,22 @@ local function smartQuote(str)
 end
 
 local controlCharsTranslation = {
-  ["\\7"]   = "\\a",  ["\\007"] = "\\a",  
-  ["\\8"]   = "\\b",  ["\\008"] = "\\b", 
-  ["\\12"]  = "\\f",  ["\\012"] = "\\f", 
-  ["\\13"]  = "\\r",  ["\\013"] = "\\r",  
-  ["\\9"]   = "\\t",  ["\\009"] = "\\t", 
-  ["\\11"]  = "\\v",  ["\\011"] = "\\v",
+  ["\a"] = "\\a",  ["\b"] = "\\b", ["\f"] = "\\f",  ["\n"] = "\\n",
+  ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v"
 }
 
+local controlCharsTranslationBeforeDigit = {}
+
+for i=0, 31 do
+    local ch = string.char(i)
+    if not controlCharsTranslation[ch] then
+        controlCharsTranslation[ch] = "\\"..i
+        controlCharsTranslationBeforeDigit[ch] = string.format("\\%03d",i)
+    end
+end
+
 local function escape(str)
-  local f = string.format("%q", str)
-  local result = f:gsub("\\%d%d?%d?", controlCharsTranslation):gsub("\\\n", "\\n"):gsub('\\"', '"'):sub(2,-2)
+  local result = str:gsub("\\", "\\\\"):gsub("(%c)%f[0-9]", controlCharsTranslationBeforeDigit):gsub("(%c)", controlCharsTranslation)
   return result
 end
 
