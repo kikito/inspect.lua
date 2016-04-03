@@ -39,8 +39,8 @@ describe( 'inspect', function()
     end)
 
     it('escapes zeroes and other control characters properly', function()
-       assert.equals('"I have \\0 zeroes \\0000 and other \\1 control \\0010 characters"', 
-              inspect('I have \0 zeroes \0000 and other \1 control \0010 characters'))
+       assert.equals('"I have \\0 zeroes \\0000 and other \\1 control \\0010 characters \\6 \\17 \\0279 \\31"', 
+              inspect('I have \0 zeroes \0000 and other \1 control \0010 characters \6 \17 \0279 \31'))
     end)
 
     it('backslashes its backslashes', function()
