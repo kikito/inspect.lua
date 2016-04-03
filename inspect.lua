@@ -164,27 +164,31 @@ local function makePath(path, ...)
   return newPath
 end
 
-local function processRecursive(process, item, path)
-  if item == nil then return nil end
+local function processRecursive(process, item, path, visited)
+    
+    if item == nil then return nil end
+    if visited[item] then return visited[item] end
+  
+    local processed = process(item, path)
+    if type(processed) == 'table' then
+      local processedCopy = {}
+      visited[item] = processedCopy
+      local processedKey
 
-  local processed = process(item, path)
-  if type(processed) == 'table' then
-    local processedCopy = {}
-    local processedKey
-
-    for k,v in pairs(processed) do
-      processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY))
-      if processedKey ~= nil then
-        processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey))
+      for k,v in pairs(processed) do
+        processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY), visited)
+        if processedKey ~= nil then
+          processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey), visited)
+        end
       end
-    end
 
-    local mt  = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE))
-    setmetatable(processedCopy, mt)
-    processed = processedCopy
-  end
-  return processed
+      local mt  = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE), visited)
+      setmetatable(processedCopy, mt)
+      processed = processedCopy
+    end
+    return processed
 end
+
 
 
 -------------------------------------------------------------------
@@ -315,7 +319,7 @@ function inspect.inspect(root, options)
   local process = options.process
 
   if process then
-    root = processRecursive(process, root, {})
+    root = processRecursive(process, root, {}, {})
   end
 
   local inspector = setmetatable({
