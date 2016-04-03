@@ -28,7 +28,7 @@ local inspect ={
   ]]
 }
 
-inspect.tostring = _G.tostring
+local tostring = tostring
 
 inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
@@ -112,7 +112,7 @@ local function getToStringResultSafely(t, mt)
   local str, ok
   if type(__tostring) == 'function' then
     ok, str = pcall(__tostring, t)
-    str = ok and str or 'error: ' .. inspect.tostring(str)
+    str = ok and str or 'error: ' .. tostring(str)
   end
   if type(str) == 'string' and #str > 0 then return str end
 end
@@ -226,7 +226,7 @@ function Inspector:getId(v)
     self.maxIds[tv] = id
     self.ids[tv][v] = id
   end
-  return inspect.tostring(id)
+  return tostring(id)
 end
 
 function Inspector:putKey(k)
@@ -238,7 +238,7 @@ end
 
 function Inspector:putTable(t)
   if t == inspect.KEY or t == inspect.METATABLE then
-    self:puts(inspect.tostring(t))
+    self:puts(tostring(t))
   elseif self:alreadyVisited(t) then
     self:puts('<table ', self:getId(t), '>')
   elseif self.level >= self.depth then
@@ -298,7 +298,7 @@ function Inspector:putValue(v)
   if tv == 'string' then
     self:puts(smartQuote(escape(v)))
   elseif tv == 'number' or tv == 'boolean' or tv == 'nil' then
-    self:puts(inspect.tostring(v))
+    self:puts(tostring(v))
   elseif tv == 'table' then
     self:putTable(v)
   else
