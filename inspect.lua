@@ -164,34 +164,29 @@ local function makePath(path, ...)
   return newPath
 end
 
-local function processRecursive(process, item, path)
-    local visited = {}
+local function processRecursive(process, item, path, visited)
     
-    local function processRecursive2(item2, path2)
-      if item2 == nil then return nil end
-      if visited[item2] then return visited[item2] end
-    
-      local processed = process(item2, path2)
-      if type(processed) == 'table' then
-        local processedCopy = {}
-        visited[item2] = processedCopy
-        local processedKey
+    if item == nil then return nil end
+    if visited[item] then return visited[item] end
+  
+    local processed = process(item, path)
+    if type(processed) == 'table' then
+      local processedCopy = {}
+      visited[item] = processedCopy
+      local processedKey
 
-        for k,v in pairs(processed) do
-          processedKey = processRecursive2(k, makePath(path2, k, inspect.KEY))
-          if processedKey ~= nil then
-            processedCopy[processedKey] = processRecursive2(v, makePath(path2, processedKey))
-          end
+      for k,v in pairs(processed) do
+        processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY), visited)
+        if processedKey ~= nil then
+          processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey), visited)
         end
-
-        local mt  = processRecursive2(getmetatable(processed), makePath(path2, inspect.METATABLE))
-        setmetatable(processedCopy, mt)
-        processed = processedCopy
       end
-      return processed
+
+      local mt  = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE), visited)
+      setmetatable(processedCopy, mt)
+      processed = processedCopy
     end
-    
-    return processRecursive2(item, path)
+    return processed
 end
 
 
@@ -324,7 +319,7 @@ function inspect.inspect(root, options)
   local process = options.process
 
   if process then
-    root = processRecursive(process, root, {})
+    root = processRecursive(process, root, {}, {})
   end
 
   local inspector = setmetatable({
