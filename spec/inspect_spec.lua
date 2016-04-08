@@ -417,4 +417,13 @@ describe( 'inspect', function()
       end)
     end)
   end)
+
+  it('allows changing the global tostring', function()
+    local save = _G.tostring
+    _G.tostring = inspect 
+    local s = tostring({1, 2, 3})
+    _G.tostring = save    
+    assert.equals("{ 1, 2, 3 }", s)
+  end) 
+
 end)

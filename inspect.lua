@@ -28,6 +28,8 @@ local inspect ={
   ]]
 }
 
+local tostring = tostring
+
 inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
 
@@ -202,7 +204,7 @@ function Inspector:puts(...)
   local len    = #buffer
   for i=1, #args do
     len = len + 1
-    buffer[len] = tostring(args[i])
+    buffer[len] = args[i]
   end
 end
 
@@ -228,7 +230,7 @@ function Inspector:getId(v)
     self.maxIds[tv] = id
     self.ids[tv][v] = id
   end
-  return id
+  return tostring(id)
 end
 
 function Inspector:putKey(k)
