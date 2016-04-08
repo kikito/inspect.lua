@@ -47,8 +47,18 @@ local controlCharsTranslation = {
   ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v"
 }
 
+local controlCharsTranslationBeforeDigit = {}
+
+for i=0, 31 do
+    local ch = string.char(i)
+    if not controlCharsTranslation[ch] then
+        controlCharsTranslation[ch] = "\\"..i
+        controlCharsTranslationBeforeDigit[ch] = string.format("\\%03d",i)
+    end
+end
+
 local function escape(str)
-  local result = str:gsub("\\", "\\\\"):gsub("(%c)", controlCharsTranslation)
+  local result = str:gsub("\\", "\\\\"):gsub("(%c)%f[0-9]", controlCharsTranslationBeforeDigit):gsub("(%c)", controlCharsTranslation)
   return result
 end
 
