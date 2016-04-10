@@ -1,3 +1,11 @@
+## v3.1.0
+
+* Fixes bug: all control codes are escaped correctly (instead of only the named ones such as \n).
+  Example: \1 becomes \\1 (or \\001 when followed by a digit)
+* Fixes bug when using the `process` option in recursive tables
+* Overriding global `tostring` with inspect no longer results in an error.
+* Simplifies id generation, using less tables and metatables.
+
 ## v3.0.3
 * Fixes a bug which sometimes displayed struct-like parts of tables as sequence-like due
   to the way rawlen/the # operator are implemented.
