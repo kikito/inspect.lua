@@ -42,24 +42,24 @@ local function smartQuote(str)
   return '"' .. str:gsub('"', '\\"') .. '"'
 end
 
-local controlCharsTranslation = {
-  ["\a"] = "\\a",  ["\b"] = "\\b", ["\f"] = "\\f",  ["\n"] = "\\n",
+-- \a => '\\a', \0 => '\\0', 31 => '\31'
+local shortControlCharEscapes = {
+  ["\a"] = "\\a",  ["\b"] = "\\b", ["\f"] = "\\f", ["\n"] = "\\n",
   ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v"
 }
-
-local controlCharsTranslationBeforeDigit = {}
-
+local longControlCharEscapes = {} -- \a => nil, \0 => \000, 31 => \031
 for i=0, 31 do
-    local ch = string.char(i)
-    if not controlCharsTranslation[ch] then
-        controlCharsTranslation[ch] = "\\"..i
-        controlCharsTranslationBeforeDigit[ch] = string.format("\\%03d",i)
-    end
+  local ch = string.char(i)
+  if not shortControlCharEscapes[ch] then
+    shortControlCharEscapes[ch] = "\\"..i
+    longControlCharEscapes[ch]  = string.format("\\%03d", i)
+  end
 end
 
 local function escape(str)
-  local result = str:gsub("\\", "\\\\"):gsub("(%c)%f[0-9]", controlCharsTranslationBeforeDigit):gsub("(%c)", controlCharsTranslation)
-  return result
+  return (str:gsub("\\", "\\\\")
+             :gsub("(%c)%f[0-9]", longControlCharEscapes)
+             :gsub("%c", shortControlCharEscapes))
 end
 
 local function isIdentifier(str)
