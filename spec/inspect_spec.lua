@@ -27,15 +27,15 @@ describe( 'inspect', function()
     end)
 
     it('escapes newlines properly', function()
-       assert.equals('"I have \\n new \\n lines"', inspect('I have \n new \n lines'))
+      assert.equals('"I have \\n new \\n lines"', inspect('I have \n new \n lines'))
     end)
 
     it('escapes tabs properly', function()
-       assert.equals('"I have \\t a tab character"', inspect('I have \t a tab character'))
+      assert.equals('"I have \\t a tab character"', inspect('I have \t a tab character'))
     end)
 
     it('escapes backspaces properly', function()
-       assert.equals('"I have \\b a back space"', inspect('I have \b a back space'))
+      assert.equals('"I have \\b a back space"', inspect('I have \b a back space'))
     end)
 
     it('escapes zeroes and other control characters properly', function()
@@ -44,9 +44,9 @@ describe( 'inspect', function()
     end)
 
     it('backslashes its backslashes', function()
-       assert.equals('"I have \\\\ a backslash"', inspect('I have \\ a backslash'))
-       assert.equals('"I have \\\\\\\\ two backslashes"', inspect('I have \\\\ two backslashes'))
-       assert.equals('"I have \\\\\\n a backslash followed by a newline"', inspect('I have \\\n a backslash followed by a newline'))
+      assert.equals('"I have \\\\ a backslash"', inspect('I have \\ a backslash'))
+      assert.equals('"I have \\\\\\\\ two backslashes"', inspect('I have \\\\ two backslashes'))
+      assert.equals('"I have \\\\\\n a backslash followed by a newline"', inspect('I have \\\n a backslash followed by a newline'))
     end)
 
   end)
@@ -320,7 +320,7 @@ describe( 'inspect', function()
         }, items)
 
       end)
-  
+
       it('handles recursive tables correctly', function()
           local tbl = { 1,2,3}
           tbl.loop = tbl
@@ -425,10 +425,10 @@ describe( 'inspect', function()
 
   it('allows changing the global tostring', function()
     local save = _G.tostring
-    _G.tostring = inspect 
+    _G.tostring = inspect
     local s = tostring({1, 2, 3})
-    _G.tostring = save    
+    _G.tostring = save
     assert.equals("{ 1, 2, 3 }", s)
-  end) 
+  end)
 
 end)
