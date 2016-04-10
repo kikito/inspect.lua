@@ -127,21 +127,6 @@ local function getToStringResultSafely(t, mt)
   if type(str) == 'string' and #str > 0 then return str end
 end
 
-local maxIdsMetaTable = {
-  __index = function(self, typeName)
-    rawset(self, typeName, 0)
-    return 0
-  end
-}
-
-local idsMetaTable = {
-  __index = function (self, typeName)
-    local col = {}
-    rawset(self, typeName, col)
-    return col
-  end
-}
-
 local function countTableAppearances(t, tableAppearances)
   tableAppearances = tableAppearances or {}
 
@@ -229,16 +214,16 @@ function Inspector:tabify()
 end
 
 function Inspector:alreadyVisited(v)
-  return self.ids[type(v)][v] ~= nil
+  return self.ids[v] ~= nil
 end
 
 function Inspector:getId(v)
-  local tv = type(v)
-  local id = self.ids[tv][v]
+  local id = self.ids[v]
   if not id then
-    id              = self.maxIds[tv] + 1
+    local tv = type(v)
+    id              = (self.maxIds[tv] or 0) + 1
     self.maxIds[tv] = id
-    self.ids[tv][v] = id
+    self.ids[v]     = id
   end
   return tostring(id)
 end
@@ -336,10 +321,10 @@ function inspect.inspect(root, options)
 
   local inspector = setmetatable({
     depth            = depth,
-    buffer           = {},
     level            = 0,
-    ids              = setmetatable({}, idsMetaTable),
-    maxIds           = setmetatable({}, maxIdsMetaTable),
+    buffer           = {},
+    ids              = {},
+    maxIds           = {},
     newline          = newline,
     indent           = indent,
     tableAppearances = countTableAppearances(root)
