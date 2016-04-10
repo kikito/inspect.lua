@@ -38,9 +38,14 @@ describe( 'inspect', function()
       assert.equals('"I have \\b a back space"', inspect('I have \b a back space'))
     end)
 
-    it('escapes zeroes and other control characters properly', function()
-       assert.equals('"I have \\0 zeroes \\0000 and other \\1 control \\0010 characters \\6 \\17 \\0279 \\31"', 
-              inspect('I have \0 zeroes \0000 and other \1 control \0010 characters \6 \17 \0279 \31'))
+    it('escapes unnamed control characters with 1 or 2 digits', function()
+      assert.equals('"Here are some control characters: \\0 \\1 \\6 \\17 \\27 \\31"',
+      inspect('Here are some control characters: \0 \1 \6 \17 \27 \31'))
+    end)
+
+    it('escapes unnamed control characters with 3 digits when they are followed by numbers', function()
+      assert.equals('"Control chars followed by digits \\0001 \\0011 \\0061 \\0171 \\0271 \\0311"',
+      inspect('Control chars followed by digits \0001 \0011 \0061 \0171 \0271 \0311'))
     end)
 
     it('backslashes its backslashes', function()
