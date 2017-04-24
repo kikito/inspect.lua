@@ -107,10 +107,22 @@ local function getSequenceLength(t)
   return len - 1
 end
 
+local function isObservableTable(t)
+  return type(t) == "table" and type(t.pairs) == "function" and type(t.addObserver) == "function" and type(t.removeObserver) == "function"
+end
+
+local function tpairs(t)
+  if isObservableTable(t) then
+    return t:pairs()
+  else
+    return pairs(t)
+  end
+end
+
 local function getNonSequentialKeys(t)
   local keys = {}
   local sequenceLength = getSequenceLength(t)
-  for k,_ in pairs(t) do
+  for k,_ in tpairs(t) do
     if not isSequenceKey(k, sequenceLength) then table.insert(keys, k) end
   end
   table.sort(keys, sortKeys)
@@ -133,7 +145,7 @@ local function countTableAppearances(t, tableAppearances)
   if type(t) == 'table' then
     if not tableAppearances[t] then
       tableAppearances[t] = 1
-      for k,v in pairs(t) do
+      for k,v in tpairs(t) do
         countTableAppearances(k, tableAppearances)
         countTableAppearances(v, tableAppearances)
       end
@@ -172,7 +184,7 @@ local function processRecursive(process, item, path, visited)
       visited[item] = processedCopy
       local processedKey
 
-      for k,v in pairs(processed) do
+      for k,v in tpairs(processed) do
         processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY), visited)
         if processedKey ~= nil then
           processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey), visited)
