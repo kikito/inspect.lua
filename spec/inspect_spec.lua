@@ -51,7 +51,8 @@ describe( 'inspect', function()
     it('backslashes its backslashes', function()
       assert.equals('"I have \\\\ a backslash"', inspect('I have \\ a backslash'))
       assert.equals('"I have \\\\\\\\ two backslashes"', inspect('I have \\\\ two backslashes'))
-      assert.equals('"I have \\\\\\n a backslash followed by a newline"', inspect('I have \\\n a backslash followed by a newline'))
+      assert.equals('"I have \\\\\\n a backslash followed by a newline"',
+                    inspect('I have \\\n a backslash followed by a newline'))
     end)
 
   end)
