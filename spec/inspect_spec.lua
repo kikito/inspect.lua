@@ -71,7 +71,8 @@ describe( 'inspect', function()
 
   if is_luajit then
     it('works with luajit cdata', function()
-      assert.equals('{ <cdata 1>, <cdata 2>, <cdata 3> }', inspect({ ffi.new("int", 1), ffi.typeof("int"), ffi.typeof("int")(1) }))
+      assert.equals('{ cdata<int>: PTR, ctype<int>, cdata<int>: PTR }',
+                    inspect({ ffi.new("int", 1), ffi.typeof("int"), ffi.typeof("int")(1) }):gsub('(0x%x+)','PTR'))
     end)
   end
 
