@@ -1,3 +1,7 @@
+## v3.1.1
+
+* Better handling of LuaJIT's `ctype` and `cdata` values (#34, thanks @akopytov)
+
 ## v3.1.0
 
 * Fixes bug: all control codes are escaped correctly (instead of only the named ones such as \n).
