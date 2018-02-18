@@ -180,6 +180,7 @@ local function processRecursive(process, item, path, visited)
       end
 
       local mt  = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE), visited)
+      if type(mt) ~= 'table' then mt = nil end -- ignore not nil/table __metatable field
       setmetatable(processedCopy, mt)
       processed = processedCopy
     end
@@ -273,7 +274,7 @@ function Inspector:putTable(t)
         count = count + 1
       end
 
-      if mt then
+      if type(mt) == 'table' then
         if count > 0 then self:puts(',') end
         self:tabify()
         self:puts('<metatable> = ')
@@ -281,7 +282,7 @@ function Inspector:putTable(t)
       end
     end)
 
-    if #nonSequentialKeys > 0 or mt then -- result is multi-lined. Justify closing }
+    if #nonSequentialKeys > 0 or type(mt) == 'table' then -- result is multi-lined. Justify closing }
       self:tabify()
     elseif sequenceLength > 0 then -- array tables have one extra space before closing }
       self:puts(' ')

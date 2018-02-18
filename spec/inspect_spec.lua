@@ -404,6 +404,30 @@ describe( 'inspect', function()
         ]]), inspect(t))
       end)
 
+      it('ignores metatables with __metatable field set to non-nil and non-table type', function()
+        local function process(item) return item end
+        local function inspector(data) return inspect(data, {process=process}) end
+
+        local foo = setmetatable({}, {__metatable=false})
+        local bar = setmetatable({}, {__metatable=true})
+        local baz = setmetatable({}, {__metatable=10})
+        local spam = setmetatable({}, {__metatable=nil})
+        local eggs = setmetatable({}, {__metatable={}})
+        assert.equals(unindent('{}'), inspector(foo))
+        assert.equals(unindent('{}'), inspector(bar))
+        assert.equals(unindent('{}'), inspector(baz))
+        assert.equals(unindent([[
+          {
+            <metatable> = {}
+          }
+        ]]), inspector(spam))
+        assert.equals(unindent([[
+          {
+            <metatable> = {}
+          }
+        ]]), inspector(eggs))
+      end)
+
       describe('When a table is its own metatable', function()
         it('accepts a table that is its own metatable without stack overflowing', function()
           local x = {}
