@@ -92,6 +92,18 @@ describe( 'inspect', function()
         local arr = setmetatable({1,2,3}, {__len = function() return nil end})
         assert.equals("{ 1, 2, 3,\n  <metatable> = {\n    __len = <function 1>\n  }\n}", inspect(arr))
       end)
+
+      it('handles tables with a __pairs metamethod (ignoring the __pairs metamethod and using next)', function()
+        local t = setmetatable({ {}, name = "yeah" }, { __pairs = function() end })
+        assert.equals(
+          unindent([[{ {},
+            name = "yeah",
+            <metatable> = {
+              __pairs = <function 1>
+            }
+          }]]),
+          inspect(t))
+      end)
     end
 
     it('works with simple dictionary tables', function()
