@@ -33,6 +33,10 @@ local tostring = tostring
 inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
 
+local function rawpairs(t)
+  return next, t, nil
+end
+
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
 local function smartQuote(str)
@@ -108,13 +112,16 @@ local function getSequenceLength(t)
 end
 
 local function getNonSequentialKeys(t)
-  local keys = {}
+  local keys, keysLength = {}, 0
   local sequenceLength = getSequenceLength(t)
-  for k,_ in pairs(t) do
-    if not isSequenceKey(k, sequenceLength) then table.insert(keys, k) end
+  for k,_ in rawpairs(t) do
+    if not isSequenceKey(k, sequenceLength) then
+      keysLength = keysLength + 1
+      keys[keysLength] = k
+    end
   end
   table.sort(keys, sortKeys)
-  return keys, sequenceLength
+  return keys, keysLength, sequenceLength
 end
 
 local function getToStringResultSafely(t, mt)
@@ -133,7 +140,7 @@ local function countTableAppearances(t, tableAppearances)
   if type(t) == 'table' then
     if not tableAppearances[t] then
       tableAppearances[t] = 1
-      for k,v in pairs(t) do
+      for k,v in rawpairs(t) do
         countTableAppearances(k, tableAppearances)
         countTableAppearances(v, tableAppearances)
       end
@@ -162,29 +169,28 @@ local function makePath(path, ...)
 end
 
 local function processRecursive(process, item, path, visited)
+  if item == nil then return nil end
+  if visited[item] then return visited[item] end
 
-    if item == nil then return nil end
-    if visited[item] then return visited[item] end
+  local processed = process(item, path)
+  if type(processed) == 'table' then
+    local processedCopy = {}
+    visited[item] = processedCopy
+    local processedKey
 
-    local processed = process(item, path)
-    if type(processed) == 'table' then
-      local processedCopy = {}
-      visited[item] = processedCopy
-      local processedKey
-
-      for k,v in pairs(processed) do
-        processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY), visited)
-        if processedKey ~= nil then
-          processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey), visited)
-        end
+    for k,v in rawpairs(processed) do
+      processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY), visited)
+      if processedKey ~= nil then
+        processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey), visited)
       end
-
-      local mt  = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE), visited)
-      if type(mt) ~= 'table' then mt = nil end -- ignore not nil/table __metatable field
-      setmetatable(processedCopy, mt)
-      processed = processedCopy
     end
-    return processed
+
+    local mt  = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE), visited)
+    if type(mt) ~= 'table' then mt = nil end -- ignore not nil/table __metatable field
+    setmetatable(processedCopy, mt)
+    processed = processedCopy
+  end
+  return processed
 end
 
 
@@ -246,7 +252,7 @@ function Inspector:putTable(t)
   else
     if self.tableAppearances[t] > 1 then self:puts('<', self:getId(t), '>') end
 
-    local nonSequentialKeys, sequenceLength = getNonSequentialKeys(t)
+    local nonSequentialKeys, nonSequentialKeysLength, sequenceLength = getNonSequentialKeys(t)
     local mt                = getmetatable(t)
     local toStringResult    = getToStringResultSafely(t, mt)
 
@@ -265,7 +271,8 @@ function Inspector:putTable(t)
         count = count + 1
       end
 
-      for _,k in ipairs(nonSequentialKeys) do
+      for i=1, nonSequentialKeysLength do
+        local k = nonSequentialKeys[i]
         if count > 0 then self:puts(',') end
         self:tabify()
         self:putKey(k)
@@ -282,7 +289,7 @@ function Inspector:putTable(t)
       end
     end)
 
-    if #nonSequentialKeys > 0 or type(mt) == 'table' then -- result is multi-lined. Justify closing }
+    if nonSequentialKeysLength > 0 or type(mt) == 'table' then -- result is multi-lined. Justify closing }
       self:tabify()
     elseif sequenceLength > 0 then -- array tables have one extra space before closing }
       self:puts(' ')
@@ -303,7 +310,7 @@ function Inspector:putValue(v)
   elseif tv == 'table' then
     self:putTable(v)
   else
-    self:puts('<',tv,' ',self:getId(v),'>')
+    self:puts('<', tv, ' ', self:getId(v), '>')
   end
 end
 
