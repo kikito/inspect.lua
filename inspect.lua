@@ -124,16 +124,6 @@ local function getNonSequentialKeys(t)
   return keys, keysLength, sequenceLength
 end
 
-local function getToStringResultSafely(t, mt)
-  local __tostring = type(mt) == 'table' and rawget(mt, '__tostring')
-  local str, ok
-  if type(__tostring) == 'function' then
-    ok, str = pcall(__tostring, t)
-    str = ok and str or 'error: ' .. tostring(str)
-  end
-  if type(str) == 'string' and #str > 0 then return str end
-end
-
 local function countTableAppearances(t, tableAppearances)
   tableAppearances = tableAppearances or {}
 
@@ -254,15 +244,9 @@ function Inspector:putTable(t)
 
     local nonSequentialKeys, nonSequentialKeysLength, sequenceLength = getNonSequentialKeys(t)
     local mt                = getmetatable(t)
-    local toStringResult    = getToStringResultSafely(t, mt)
 
     self:puts('{')
     self:down(function()
-      if toStringResult then
-        self:puts(' -- ', escape(toStringResult))
-        if sequenceLength >= 1 then self:tabify() end
-      end
-
       local count = 0
       for i=1, sequenceLength do
         if count > 0 then self:puts(',') end

@@ -363,32 +363,17 @@ describe( 'inspect', function()
         ]]), inspect(bar))
       end)
 
-      it('includes the __tostring metamethod if it exists', function()
-        local foo = { foo = 1, __tostring = function() return 'hello\nworld' end }
-        local bar = setmetatable({a = 1}, foo)
+      it('can be used on the __tostring metamethod of a table without errors', function()
+        local f = function(x) return inspect(x) end
+        local tbl = setmetatable({ x = 1 }, { __tostring = f })
         assert.equals(unindent([[
-          { -- hello\nworld
-            a = 1,
+          {
+            x = 1,
             <metatable> = {
-              __tostring = <function 1>,
-              foo = 1
+              __tostring = <function 1>
             }
           }
-        ]]), inspect(bar))
-      end)
-
-      it('includes an error string if __tostring metamethod throws an error', function()
-        local foo = { foo = 1, __tostring = function() error('hello', 0) end }
-        local bar = setmetatable({a = 1}, foo)
-        assert.equals(unindent([[
-          { -- error: hello
-            a = 1,
-            <metatable> = {
-              __tostring = <function 1>,
-              foo = 1
-            }
-          }
-        ]]), inspect(bar))
+        ]]), tostring(tbl))
       end)
 
       it('does not allow collecting weak tables while they are being inspected', function()
@@ -397,18 +382,16 @@ describe( 'inspect', function()
         local shimMetatable = {
           __mode = 'v',
           __index = function() return {} end,
-          __tostring = function() collectgarbage() return 'shim' end
         }
         local function shim() return setmetatable({}, shimMetatable) end
         local t = shim()
         t.key = shim()
         assert.equals(unindent([[
-          { -- shim
-            key = { -- shim
+          {
+            key = {
               <metatable> = <1>{
                 __index = <function 1>,
-                __mode = "v",
-                __tostring = <function 2>
+                __mode = "v"
               }
             },
             <metatable> = <table 1>
