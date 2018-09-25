@@ -207,7 +207,7 @@ function Inspector:down(f)
 end
 
 function Inspector:tabify()
-  self:puts(self.newline, string.rep(self.indent, self.level))
+  self:puts(self.newline, self.prefix..string.rep(self.indent, self.level))
 end
 
 function Inspector:alreadyVisited(v)
@@ -306,6 +306,7 @@ function inspect.inspect(root, options)
   local depth   = options.depth   or math.huge
   local newline = options.newline or '\n'
   local indent  = options.indent  or '  '
+  local prefix  = options.prefix  or ''
   local process = options.process
 
   if process then
@@ -320,6 +321,7 @@ function inspect.inspect(root, options)
     maxIds           = {},
     newline          = newline,
     indent           = indent,
+    prefix           = prefix,
     tableAppearances = countTableAppearances(root)
   }, Inspector_mt)
 
@@ -331,4 +333,3 @@ end
 setmetatable(inspect, { __call = function(_, ...) return inspect.inspect(...) end })
 
 return inspect
-

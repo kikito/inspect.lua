@@ -257,6 +257,22 @@ describe( 'inspect', function()
       end)
     end)
 
+	describe('the prefix option', function()
+      it('changes the line prefix', function()
+        local t = {a={b=1}}
+
+        assert.equal(unindent([[
+          {
+          @  a = {
+          @    b = 1
+          @  }
+          @}
+        ]]), inspect(t, {prefix='@'}))
+
+		assert.equal("{ a = { b = 1 } }", inspect(t, {newline='', indent='', prefix=' '}))
+      end)
+	end)
+
     describe('the process option', function()
 
       it('removes one element', function()
