@@ -126,11 +126,11 @@ assert(inspect(t5, {depth = 2}) == [[{
 
 `options.depth` defaults to infinite (`math.huge`).
 
-#### options.newline & options.indent
+#### options.newline, options.indent and options.prefix
 
-These are the strings used by `inspect` to respectively add a newline and indent each level of a table.
+These are the strings used by `inspect` to respectively add a newline, indent each level of a table, and prefix lines.
 
-By default, `options.newline` is `"\n"` and `options.indent` is `"  "` (two spaces).
+By default, `options.newline` is `"\n"`, `options.indent` is `"  "` (two spaces) and `options.prefix` is `""` (an empty string).
 
 ``` lua
 local t = {a={b=1}}
@@ -141,7 +141,10 @@ assert(inspect(t) == [[{
   }
 }]])
 
-assert(inspect(t, {newline='@', indent="++"}), "{@++a = {@++++b = 1@++}@}"
+assert(inspect(t, {newline='@', indent="++"}), "{@++a = {@++++b = 1@++}@}")
+
+assert(inspect(t, {newline='', indent='', prefix=' '}), "{ a = { b = 1 } }")
+
 ```
 
 #### options.process
@@ -246,8 +249,3 @@ Change log
 ==========
 
 Read it on the CHANGELOG.md file
-
-
-
-
-
