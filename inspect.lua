@@ -309,7 +309,7 @@ function inspect.inspect(root, options)
   local newline = options.newline or '\n'
   local indent  = options.indent  or '  '
   local process = options.process
-  local doprint = options.doprint or nil
+  local doprint = options.doprint
 
   if options.start then
     inspect.waiting = false
@@ -320,7 +320,7 @@ function inspect.inspect(root, options)
     return "inspect disabled"
   end
   if options.wait then
-    if inspect.waiting then return "did not inspect - waiting for a start" end
+    if inspect.waiting then return "did not inspect - waiting for start" end
   end
 
   if process then
