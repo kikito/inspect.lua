@@ -1,4 +1,4 @@
-local inspect ={
+local inspect = {
   _VERSION = 'inspect.lua 3.1.0',
   _URL     = 'http://github.com/kikito/inspect.lua',
   _DESCRIPTION = 'human-readable representations of tables',
@@ -29,6 +29,8 @@ local inspect ={
 }
 
 local tostring = tostring
+
+inspect.waiting = true
 
 inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
@@ -307,6 +309,19 @@ function inspect.inspect(root, options)
   local newline = options.newline or '\n'
   local indent  = options.indent  or '  '
   local process = options.process
+  local doprint = options.doprint or nil
+
+  if options.start then
+    inspect.waiting = false
+    return "inspect enabled"
+  end
+  if options.stop then
+    inspect.waiting = true
+    return "inspect disabled"
+  end
+  if options.wait then
+    if inspect.waiting then return "did not inspect - waiting for a start" end
+  end
 
   if process then
     root = processRecursive(process, root, {}, {})
@@ -325,10 +340,15 @@ function inspect.inspect(root, options)
 
   inspector:putValue(root)
 
-  return table.concat(inspector.buffer)
+  if doprint then
+    if doprint ~= "" then print(doprint) end
+    print(table.concat(inspector.buffer))
+    return ""
+  else
+    return table.concat(inspector.buffer)
+  end
 end
 
 setmetatable(inspect, { __call = function(_, ...) return inspect.inspect(...) end })
 
 return inspect
-
