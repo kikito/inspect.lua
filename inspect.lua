@@ -309,9 +309,16 @@ function Inspector:putValue(v)
   elseif tv == 'userdata' then
     local mt = getmetatable(v)
     local toStringResult = mt and getToStringResultSafely(v, mt)
-    self:puts('<', tv, ' ', self:getId(v), '>')
     if toStringResult then
+      self:puts('<userdata ', self:getId(v), '>')
       self:puts(' -- ', escape(toStringResult))
+    else
+      local str = tostring(v)
+      if str == "userdata: NULL" then
+        self:puts('<userdata NULL>')
+      else
+        self:puts('<userdata ', self:getId(v), '>')
+      end
     end
   else
     self:puts('<', tv, ' ', self:getId(v), '>')
