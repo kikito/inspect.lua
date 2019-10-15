@@ -218,6 +218,30 @@ Gotchas / Warnings
 
 This method is *not* appropriate for saving/restoring tables. It is meant to be used by the programmer mainly while debugging a program.
 
+Safe inspect version
+====================
+For cases when you need to print out whatsoever results of some function call you can use another version of `inspect` function: `safe_inspect`. Usage scenario example below:
+```
+inspect = require("inspect")
+
+-- Returns 2 values: one is a Lua table, another - just a primitive type - the number
+function two_values()
+    return {x = 15, y = 6}, 2
+end
+
+print(inspect.safe_inspect(two_values()))
+```
+
+Result will be:
+```
+{
+  x = 15,
+  y = 6
+}
+```
+
+This allows to prevent primitive type handling errors when using original `inspect` function by just throwing away all the rest returned values if they are not of the `table` type otherwise using *2nd* arg as parameters map like `inspect` function does.
+
 Installation
 ============
 

@@ -300,6 +300,14 @@ end
 
 -------------------------------------------------------------------
 
+function inspect.safe_inspect(root, options_or_primitive)
+  if type(options_or_primitive) == "table" then
+    return inspect.inspect(root, options_or_primitive)
+  else
+    return inspect.inspect(root)
+  end
+end
+
 function inspect.inspect(root, options)
   options       = options or {}
 
