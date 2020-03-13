@@ -257,6 +257,53 @@ describe( 'inspect', function()
       end)
     end)
 
+    describe('the multiline option', function()
+      it('sets a table on a singe line when `false`', function()
+        local t = { 
+          a= {1,2}
+        }
+        assert.equals("{ a = { 1, 2 } }", inspect(t, {multiline=false}))
+      end)
+
+      it('sets each table value on its own line when `true`', function()
+        local t = { 
+          a= {1,2}
+        }
+        assert.equals(unindent([[
+          {
+            a = {
+              1,
+              2
+            }
+          }
+        ]]), inspect(t, {multiline=true}))
+      end)
+      
+      it('allows users to specify a predicate function for determining new-line behavior', function()
+        local t = {
+          {
+            name = 'Link',
+            color = 'green'
+          },
+          {
+            name = 'Zelda',
+            color = 'blue'
+          }
+        }
+        local options = {
+          multiline = function(t, k) 
+            return type(k) == 'number' and type(t[k]) == 'table'
+          end
+        }
+        assert.equals(unindent([[
+          {
+            { color = "green", name = "Link" },
+            { color = "blue", name = "Zelda" }
+          }
+        ]]), inspect(t, options))
+      end)
+    end)
+
     describe('the process option', function()
 
       it('removes one element', function()

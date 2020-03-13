@@ -183,6 +183,19 @@ local function processRecursive(process, item, path, visited)
   return processed
 end
 
+local function configureMultiline(option)
+  if type(option) == 'function' then
+    return option
+  elseif type(option) == 'boolean' then
+    return function() return option end
+  else
+    return function(t, k)
+      local sequenceLength = getSequenceLength(t)
+      return not isSequenceKey(k, sequenceLength) -- only array tables are singe-line by default
+    end
+  end
+end
+
 
 
 -------------------------------------------------------------------
@@ -232,6 +245,17 @@ function Inspector:putKey(k)
   self:puts("]")
 end
 
+function Inspector:putSeparator(t, k, count, multiline)
+  local hasOwnLine = self.hasOwnLine(t, k)
+  if count > 0 then self:puts(',') end
+  if hasOwnLine then
+    self:tabify()
+  else
+    self:puts(' ')
+  end
+  return multiline or hasOwnLine
+end
+
 function Inspector:putTable(t)
   if t == inspect.KEY or t == inspect.METATABLE then
     self:puts(tostring(t))
@@ -245,20 +269,20 @@ function Inspector:putTable(t)
     local nonSequentialKeys, nonSequentialKeysLength, sequenceLength = getNonSequentialKeys(t)
     local mt                = getmetatable(t)
 
+    local multiline = false
+    local count = 0
     self:puts('{')
     self:down(function()
-      local count = 0
+
       for i=1, sequenceLength do
-        if count > 0 then self:puts(',') end
-        self:puts(' ')
+        multiline = self:putSeparator(t, i, count, multiline)
         self:putValue(t[i])
         count = count + 1
       end
 
       for i=1, nonSequentialKeysLength do
         local k = nonSequentialKeys[i]
-        if count > 0 then self:puts(',') end
-        self:tabify()
+        multiline = self:putSeparator(t, k, count, multiline)
         self:putKey(k)
         self:puts(' = ')
         self:putValue(t[k])
@@ -266,16 +290,15 @@ function Inspector:putTable(t)
       end
 
       if type(mt) == 'table' then
-        if count > 0 then self:puts(',') end
-        self:tabify()
+        multiline = self:putSeparator(t, "__metatable", count, multiline)
         self:puts('<metatable> = ')
         self:putValue(mt)
       end
     end)
 
-    if nonSequentialKeysLength > 0 or type(mt) == 'table' then -- result is multi-lined. Justify closing }
+    if multiline then -- result is multi-lined. Justify closing }
       self:tabify()
-    elseif sequenceLength > 0 then -- array tables have one extra space before closing }
+    elseif count > 0 then -- single-line tables have one extra space before closing }
       self:puts(' ')
     end
 
@@ -306,6 +329,7 @@ function inspect.inspect(root, options)
   local depth   = options.depth   or math.huge
   local newline = options.newline or '\n'
   local indent  = options.indent  or '  '
+  local hasOwnLine = configureMultiline(options.multiline)
   local process = options.process
 
   if process then
@@ -320,6 +344,7 @@ function inspect.inspect(root, options)
     maxIds           = {},
     newline          = newline,
     indent           = indent,
+    hasOwnLine       = hasOwnLine,
     tableAppearances = countTableAppearances(root)
   }, Inspector_mt)
 
