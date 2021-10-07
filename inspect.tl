@@ -1,45 +1,61 @@
-local inspect ={
-   _VERSION = 'inspect.lua 3.1.0',
-   _URL     = 'http://github.com/kikito/inspect.lua',
-   _DESCRIPTION = 'human-readable representations of tables',
-   _LICENSE = [[
-      MIT LICENSE
+-- inspect.tl
+local record inspect
+   _VERSION: string
+   _URL: string
+   _DESCRIPTION: string
+   _LICENSE: string
+   KEY: table
+   METATABLE: table
 
-      Copyright (c) 2013 Enrique García Cota
+   type ProcessFunction = function(any, {any}): any
 
-      Permission is hereby granted, free of charge, to any person obtaining a
-      copy of this software and associated documentation files (the
-      "Software"), to deal in the Software without restriction, including
-      without limitation the rights to use, copy, modify, merge, publish,
-      distribute, sublicense, and/or sell copies of the Software, and to
-      permit persons to whom the Software is furnished to do so, subject to
-      the following conditions:
+   record Options
+      depth: integer
+      newline: string
+      indent: string
+      process: ProcessFunction
+   end
+end
 
-      The above copyright notice and this permission notice shall be included
-      in all copies or substantial portions of the Software.
+inspect._VERSION = 'inspect.lua 3.1.0'
+inspect._URL     = 'http://github.com/kikito/inspect.lua'
+inspect._DESCRIPTION = 'human-readable representations of tables'
+inspect._LICENSE = [[
+  MIT LICENSE
 
-      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-      OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-      MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-      IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-      CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-      TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-      SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-   ]]
-}
+  Copyright (c) 2022 Enrique García Cota
+
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the
+  "Software"), to deal in the Software without restriction, including
+  without limitation the rights to use, copy, modify, merge, publish,
+  distribute, sublicense, and/or sell copies of the Software, and to
+  permit persons to whom the Software is furnished to do so, subject to
+  the following conditions:
+
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+]]
+inspect.KEY       = setmetatable({}, {__tostring = function(): string return 'inspect.KEY' end})
+inspect.METATABLE = setmetatable({}, {__tostring = function(): string return 'inspect.METATABLE' end})
 
 local tostring = tostring
 
-inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
-inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
-
-local function rawpairs(t)
+local function rawpairs(t: table): function, table, nil
    return next, t, nil
 end
 
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
-local function smartQuote(str)
+local function smartQuote(str: string): string
    if str:match('"') and not str:match("'") then
       return "'" .. str .. "'"
    end
@@ -47,48 +63,51 @@ local function smartQuote(str)
 end
 
 -- \a => '\\a', \0 => '\\0', 31 => '\31'
-local shortControlCharEscapes = {
+local shortControlCharEscapes: {string:string} = {
    ["\a"] = "\\a",  ["\b"] = "\\b", ["\f"] = "\\f", ["\n"] = "\\n",
-   ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v"
+   ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v", ["\127"] = "\\127",
 }
-local longControlCharEscapes = {} -- \a => nil, \0 => \000, 31 => \031
+local longControlCharEscapes: {string:string} = {["\127"]="\127"} -- \a => nil, \0 => \000, 31 => \031
 for i=0, 31 do
-   local ch = string.char(i)
+   local ch: string = string.char(i)
    if not shortControlCharEscapes[ch] then
       shortControlCharEscapes[ch] = "\\"..i
       longControlCharEscapes[ch]  = string.format("\\%03d", i)
    end
 end
 
-local function escape(str)
+local function escape(str: string): string
    return (str:gsub("\\", "\\\\")
               :gsub("(%c)%f[0-9]", longControlCharEscapes)
               :gsub("%c", shortControlCharEscapes))
 end
 
-local function isIdentifier(str)
-   return type(str) == 'string' and str:match( "^[_%a][_%a%d]*$" )
+local function isIdentifier(str: any): boolean
+   return str is string and not not str:match("^[_%a][_%a%d]*$")
 end
 
-local function isSequenceKey(k, sequenceLength)
-   return type(k) == 'number'
-   and 1 <= k
-   and k <= sequenceLength
-   and math.floor(k) == k
+local flr = math.floor
+local function isSequenceKey(k: any, sequenceLength: integer): boolean
+   return k is number
+      and flr(k) == k
+      and 1 <= (k)
+      and k <= sequenceLength
 end
 
-local defaultTypeOrders = {
+local defaultTypeOrders: {string:integer} = {
    ['number']   = 1, ['boolean']  = 2, ['string'] = 3, ['table'] = 4,
    ['function'] = 5, ['userdata'] = 6, ['thread'] = 7
 }
 
-local function sortKeys(a, b)
-   local ta, tb = type(a), type(b)
+local function sortKeys(a:any, b:any): boolean
+   local ta, tb: string, string = type(a), type(b)
 
    -- strings and numbers are sorted numerically/alphabetically
-   if ta == tb and (ta == 'string' or ta == 'number') then return a < b end
+   if ta == tb and (ta == 'string' or ta == 'number') then
+      return (a as string) < (b as string)
+   end
 
-   local dta, dtb = defaultTypeOrders[ta], defaultTypeOrders[tb]
+   local dta, dtb: integer, integer = defaultTypeOrders[ta], defaultTypeOrders[tb]
    -- Two default types are compared according to the defaultTypeOrders table
    if dta and dtb then return defaultTypeOrders[ta] < defaultTypeOrders[tb]
    elseif dta     then return true  -- default types before custom ones
@@ -101,9 +120,9 @@ end
 
 -- For implementation reasons, the behavior of rawlen & # is "undefined" when
 -- tables aren't pure sequences. So we implement our own # operator.
-local function getSequenceLength(t)
-   local len = 1
-   local v = rawget(t,len)
+local function getSequenceLength(t: table): integer
+   local len: integer = 1
+   local v: any = rawget(t, len)
    while v ~= nil do
       len = len + 1
       v = rawget(t,len)
@@ -111,9 +130,9 @@ local function getSequenceLength(t)
    return len - 1
 end
 
-local function getNonSequentialKeys(t)
-   local keys, keysLength = {}, 0
-   local sequenceLength = getSequenceLength(t)
+local function getNonSequentialKeys(t: table): {any}, integer, integer
+   local keys, keysLength: {any}, integer = {}, 0
+   local sequenceLength: integer = getSequenceLength(t)
    for k,_ in rawpairs(t) do
       if not isSequenceKey(k, sequenceLength) then
          keysLength = keysLength + 1
@@ -124,10 +143,10 @@ local function getNonSequentialKeys(t)
    return keys, keysLength, sequenceLength
 end
 
-local function countTableAppearances(t, tableAppearances)
+local function countTableAppearances(t: any, tableAppearances: {any:integer}): {any:integer}
    tableAppearances = tableAppearances or {}
 
-   if type(t) == 'table' then
+   if t is table then
       if not tableAppearances[t] then
          tableAppearances[t] = 1
          for k,v in rawpairs(t) do
@@ -143,30 +162,30 @@ local function countTableAppearances(t, tableAppearances)
    return tableAppearances
 end
 
-local copySequence = function(s)
-   local copy, len = {}, #s
-   for i=1, len do copy[i] = s[i] end
-   return copy, len
-end
+local function makePath(path: {any}, a: any, b: any): {any}
+   local newPath: {any} = {}
+   local len: integer = #path
+   for i=1, len do newPath[i] = path[i] end
 
-local function makePath(path, ...)
-   local keys = {...}
-   local newPath, len = copySequence(path)
-   for i=1, #keys do
-      newPath[len + i] = keys[i]
-   end
+   newPath[len + 1] = a
+   newPath[len + 2] = b
+
    return newPath
 end
 
-local function processRecursive(process, item, path, visited)
+
+local function processRecursive(process: inspect.ProcessFunction,
+                                item: any,
+                                path: {any},
+                                visited: {any:any}): any
    if item == nil then return nil end
    if visited[item] then return visited[item] end
 
-   local processed = process(item, path)
-   if type(processed) == 'table' then
+   local processed: any = process(item, path)
+   if processed is table then
       local processedCopy = {}
       visited[item] = processedCopy
-      local processedKey
+      local processedKey: any
 
       for k,v in rawpairs(processed) do
          processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY), visited)
@@ -177,7 +196,7 @@ local function processRecursive(process, item, path, visited)
 
       local mt  = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE), visited)
       if type(mt) ~= 'table' then mt = nil end -- ignore not nil/table __metatable field
-      setmetatable(processedCopy, mt)
+      setmetatable(processedCopy, mt as metatable<{any:any}>)
       processed = processedCopy
    end
    return processed
@@ -187,37 +206,48 @@ end
 
 -------------------------------------------------------------------
 
-local Inspector = {}
-local Inspector_mt = {__index = Inspector}
-
-function Inspector:puts(...)
-   local args   = {...}
-   local buffer = self.buffer
-   local len    = #buffer
-   for i=1, #args do
-      len = len + 1
-      buffer[len] = args[i]
-   end
+local type Inspector = record
+   depth: integer
+   level: integer
+   buffer: {string}
+   ids: {any:integer}
+   maxIds: {any:integer}
+   newline: string
+   indent: string
+   tableAppearances: {table: integer}
 end
 
-function Inspector:down(f)
+local Inspector_mt = {__index = Inspector}
+
+function Inspector:puts(a:string, b:string, c:string, d:string, e:string): nil
+   local buffer: {string} = self.buffer
+   local len: integer     = #buffer
+   buffer[len+1] = a
+   buffer[len+2] = b
+   buffer[len+3] = c
+   buffer[len+4] = d
+   buffer[len+5] = e
+end
+
+function Inspector:down(f: function()): nil
    self.level = self.level + 1
    f()
    self.level = self.level - 1
 end
 
-function Inspector:tabify()
-   self:puts(self.newline, string.rep(self.indent, self.level))
+function Inspector:tabify(): nil
+   self:puts(self.newline,
+   string.rep(self.indent, self.level))
 end
 
-function Inspector:alreadyVisited(v)
+function Inspector:alreadyVisited(v: any): boolean
    return self.ids[v] ~= nil
 end
 
-function Inspector:getId(v)
-   local id = self.ids[v]
+function Inspector:getId(v: any): string
+   local id: integer = self.ids[v]
    if not id then
-      local tv = type(v)
+      local tv: string = type(v)
       id              = (self.maxIds[tv] or 0) + 1
       self.maxIds[tv] = id
       self.ids[v]     = id
@@ -225,14 +255,21 @@ function Inspector:getId(v)
    return tostring(id)
 end
 
-function Inspector:putKey(k)
-   if isIdentifier(k) then return self:puts(k) end
+-- dummy function; defined later
+function Inspector:putValue(_: any):nil
+end
+
+function Inspector:putKey(k: any): nil
+   if isIdentifier(k) then
+      self:puts(k as string)
+      return
+   end
    self:puts("[")
    self:putValue(k)
    self:puts("]")
 end
 
-function Inspector:putTable(t)
+function Inspector:putTable(t: table): nil
    if t == inspect.KEY or t == inspect.METATABLE then
       self:puts(tostring(t))
    elseif self:alreadyVisited(t) then
@@ -243,7 +280,7 @@ function Inspector:putTable(t)
       if self.tableAppearances[t] > 1 then self:puts('<', self:getId(t), '>') end
 
       local nonSequentialKeys, nonSequentialKeysLength, sequenceLength = getNonSequentialKeys(t)
-      local mt                = getmetatable(t)
+      local mt = getmetatable(t)
 
       self:puts('{')
       self:down(function()
@@ -283,16 +320,15 @@ function Inspector:putTable(t)
    end
 end
 
-function Inspector:putValue(v)
-   local tv = type(v)
-
+function Inspector:putValue(v: any)
+   local tv: string = type(v)
    if tv == 'string' then
-      self:puts(smartQuote(escape(v)))
+      self:puts(smartQuote(escape(v as string)))
    elseif tv == 'number' or tv == 'boolean' or tv == 'nil' or
-      tv == 'cdata' or tv == 'ctype' then
-      self:puts(tostring(v))
+          tv == 'cdata' or tv == 'ctype' then
+      self:puts(tostring(v as number))
    elseif tv == 'table' then
-      self:putTable(v)
+      self:putTable(v as table)
    else
       self:puts('<', tv, ' ', self:getId(v), '>')
    end
@@ -300,13 +336,14 @@ end
 
 -------------------------------------------------------------------
 
-function inspect.inspect(root, options)
+
+function inspect.inspect(root: any, options: inspect.Options): string
    options       = options or {}
 
-   local depth   = options.depth   or math.huge
-   local newline = options.newline or '\n'
-   local indent  = options.indent  or '  '
-   local process = options.process
+   local depth: integer  = options.depth   or (math.huge as integer)
+   local newline: string = options.newline or '\n'
+   local indent: string  = options.indent  or '  '
+   local process: inspect.ProcessFunction = options.process
 
    if process then
       root = processRecursive(process, root, {}, {})
@@ -321,14 +358,17 @@ function inspect.inspect(root, options)
       newline          = newline,
       indent           = indent,
       tableAppearances = countTableAppearances(root)
-   }, Inspector_mt)
+   } as Inspector, Inspector_mt)
 
    inspector:putValue(root)
 
    return table.concat(inspector.buffer)
 end
 
-setmetatable(inspect, { __call = function(_, ...) return inspect.inspect(...) end })
+setmetatable(inspect, {
+   __call = function(_, root: any, options: inspect.Options): string
+      return inspect.inspect(root, options)
+   end
+})
 
 return inspect
-
