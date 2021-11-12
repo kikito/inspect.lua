@@ -43,7 +43,12 @@ describe( 'inspect', function()
       inspect('Here are some control characters: \0 \1 \6 \17 \27 \31'))
     end)
 
-    it('escapes unnamed control characters with 3 digits when they are followed by numbers', function()
+    it('escapes DEL', function()
+      assert.equals('"DEL: \\127"',
+      inspect('DEL: \127'))
+    end)
+
+    it('escapes unnamed control characters with 4 digits when they are followed by numbers', function()
       assert.equals('"Control chars followed by digits \\0001 \\0011 \\0061 \\0171 \\0271 \\0311"',
       inspect('Control chars followed by digits \0001 \0011 \0061 \0171 \0271 \0311'))
     end)
