@@ -1,3 +1,7 @@
+## v3.1.2
+
+* DEL character is properly escaped in strings (#49, thanks @4mig4 and @LoganDark for the bug report)
+
 ## v3.1.1
 
 * Better handling of LuaJIT's `ctype` and `cdata` values (#34, thanks @akopytov)
