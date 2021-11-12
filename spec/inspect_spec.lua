@@ -368,6 +368,17 @@ describe( 'inspect', function()
         ]]), inspect(bar))
       end)
 
+      it('includes the __tostring metamethod of userdata', function()
+        local tbl = {
+          f = io.tmpfile(),
+        }
+        assert.equals(unindent([[
+          {
+            f = <userdata 1> -- $FILE
+          }
+        ]]):gsub("$FILE", tostring(tbl.f)), inspect(tbl))
+      end)
+
       it('can be used on the __tostring metamethod of a table without errors', function()
         local f = function(x) return inspect(x) end
         local tbl = setmetatable({ x = 1 }, { __tostring = f })
