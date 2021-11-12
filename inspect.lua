@@ -46,12 +46,12 @@ local function smartQuote(str)
   return '"' .. str:gsub('"', '\\"') .. '"'
 end
 
--- \a => '\\a', \0 => '\\0', 31 => '\31'
+-- \a => '\\a', \0 => nil
 local shortControlCharEscapes = {
   ["\a"] = "\\a",  ["\b"] = "\\b", ["\f"] = "\\f", ["\n"] = "\\n",
-  ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v"
+  ["\r"] = "\\r",  ["\t"] = "\\t", ["\v"] = "\\v", ["\127"] = "\\127",
 }
-local longControlCharEscapes = {} -- \a => nil, \0 => \000, 31 => \031
+local longControlCharEscapes = {["\127"]="\127"} -- \a => nil, \0 => \000, 31 => \031
 for i=0, 31 do
   local ch = string.char(i)
   if not shortControlCharEscapes[ch] then
@@ -59,6 +59,7 @@ for i=0, 31 do
     longControlCharEscapes[ch]  = string.format("\\%03d", i)
   end
 end
+--longControlCharEscapes["\127"]="\\127"
 
 local function escape(str)
   return (str:gsub("\\", "\\\\")
