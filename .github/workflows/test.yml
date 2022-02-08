@@ -19,10 +19,13 @@ jobs:
 
     - uses: leafo/gh-actions-luarocks@v4.0.0
 
-    - name: build
+    - name: make_dev
       run: |
-        luarocks install busted
+        make dev
         luarocks make
+
+    - name: luacheck
+      run: luacheck inspect.lua
 
     - name: test
       run: |
