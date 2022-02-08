@@ -232,12 +232,28 @@ Remember to store the value returned by require somewhere! (I suggest a local va
 
 Also, make sure to read the license; the text of that license file must appear somewhere in your projects' files. For your convenience, it's included at the begining of inspect.lua.
 
-Specs
-=====
+Contributing
+============
 
-This project uses [busted](http://olivinelabs.com/busted/) for its specs. If you want to run the specs, you will have to install busted first. Then just execute the following from the root inspect folder:
+This project uses [Teal](https://github.com/teal-language/tl), a typed dialect of Lua (which generates plain lua files too)
 
-    busted
+If you want to send a pull request to this project, first of all, thank you! You will need to install the. You can install all of them by running:
+
+```
+make dev
+```
+
+When writing your PR, please make your modifications on the `inspect.tl` file and then generate the `inspect.lua` file from it. You will probably want to make sure that the tests are still 
+working (github should run them from you, but they should run very fast). You can do both things in one go by just invoking
+
+```
+make
+```
+
+This will generate `inspect.lua`, check it with [luacheck](https://github.com/lunarmodules/luacheck) and then launch [busted](http://olivinelabs.com/busted/) to run the specs.
+
+If you are sending a pull request, you might want to add some specs in the `specs` folder.
+
 
 Change log
 ==========
