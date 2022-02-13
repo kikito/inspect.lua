@@ -279,32 +279,34 @@ function Inspector:putTable(t)
       local mt = getmetatable(t)
 
       self:puts('{')
-      self:down(function()
-         local count = 0
-         for i = 1, sequenceLength do
-            if count > 0 then self:puts(',') end
-            self:puts(' ')
-            self:putValue(t[i])
-            count = count + 1
-         end
+      self.level = self.level + 1
 
-         for i = 1, nonSequentialKeysLength do
-            local k = nonSequentialKeys[i]
-            if count > 0 then self:puts(',') end
-            self:tabify()
-            self:putKey(k)
-            self:puts(' = ')
-            self:putValue(t[k])
-            count = count + 1
-         end
+      local count = 0
+      for i = 1, sequenceLength do
+         if count > 0 then self:puts(',') end
+         self:puts(' ')
+         self:putValue(t[i])
+         count = count + 1
+      end
 
-         if type(mt) == 'table' then
-            if count > 0 then self:puts(',') end
-            self:tabify()
-            self:puts('<metatable> = ')
-            self:putValue(mt)
-         end
-      end)
+      for i = 1, nonSequentialKeysLength do
+         local k = nonSequentialKeys[i]
+         if count > 0 then self:puts(',') end
+         self:tabify()
+         self:putKey(k)
+         self:puts(' = ')
+         self:putValue(t[k])
+         count = count + 1
+      end
+
+      if type(mt) == 'table' then
+         if count > 0 then self:puts(',') end
+         self:tabify()
+         self:puts('<metatable> = ')
+         self:putValue(mt)
+      end
+
+      self.level = self.level - 1
 
       if nonSequentialKeysLength > 0 or type(mt) == 'table' then
          self:tabify()
