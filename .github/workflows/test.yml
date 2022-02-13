@@ -19,10 +19,24 @@ jobs:
 
     - uses: leafo/gh-actions-luarocks@v4.0.0
 
-    - name: build
+    - name: make_dev
       run: |
-        luarocks install busted
+        make dev
         luarocks make
+
+    - name: check_generation
+      run: |
+        cp inspect.lua inspect.lua.bak
+        make gen
+        if ! cmp --silent inspect.lua inspect.lua.bak ; then
+          echo "The generated inspect.lua is different from the one in the repo." \
+               "Please make your modifications in inspect.tl, regenerate with 'make dev && make'," \
+               "and commit both inspect.tl and inspect.lua in your Pull Request"
+          exit 1
+        fi
+
+    - name: luacheck
+      run: luacheck inspect.lua
 
     - name: test
       run: |
