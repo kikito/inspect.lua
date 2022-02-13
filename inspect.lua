@@ -255,10 +255,6 @@ function Inspector:getId(v)
    return tostring(id)
 end
 
-
-function Inspector:putValue(_)
-end
-
 function Inspector:putKey(k)
    if isIdentifier(k) then
       self:puts(k)

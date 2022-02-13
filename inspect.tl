@@ -255,10 +255,6 @@ function Inspector:getId(v: any): string
    return tostring(id)
 end
 
--- dummy function; defined later
-function Inspector:putValue(_: any):nil
-end
-
 function Inspector:putKey(k: any): nil
    if isIdentifier(k) then
       self:puts(k as string)
