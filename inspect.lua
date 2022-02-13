@@ -216,7 +216,6 @@ local Inspector = {}
 
 
 
-
 local Inspector_mt = { __index = Inspector }
 
 function Inspector:puts(a, b, c, d, e)
@@ -227,12 +226,6 @@ function Inspector:puts(a, b, c, d, e)
    buffer[len + 3] = c
    buffer[len + 4] = d
    buffer[len + 5] = e
-end
-
-function Inspector:down(f)
-   self.level = self.level + 1
-   f()
-   self.level = self.level - 1
 end
 
 function Inspector:tabify()
@@ -246,11 +239,11 @@ end
 
 function Inspector:getId(v)
    local id = self.ids[v]
+   local ids = self.ids
    if not id then
       local tv = type(v)
-      id = (self.maxIds[tv] or 0) + 1
-      self.maxIds[tv] = id
-      self.ids[v] = id
+      id = (ids[tv] or 0) + 1
+      ids[v], ids[tv] = id, id
    end
    return tostring(id)
 end
@@ -352,7 +345,6 @@ function inspect.inspect(root, options)
       level = 0,
       buffer = {},
       ids = {},
-      maxIds = {},
       newline = newline,
       indent = indent,
       tableAppearances = countTableAppearances(root),

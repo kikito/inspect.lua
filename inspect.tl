@@ -211,7 +211,6 @@ local type Inspector = record
    level: integer
    buffer: {string}
    ids: {any:integer}
-   maxIds: {any:integer}
    newline: string
    indent: string
    tableAppearances: {table: integer}
@@ -229,12 +228,6 @@ function Inspector:puts(a:string, b:string, c:string, d:string, e:string): nil
    buffer[len+5] = e
 end
 
-function Inspector:down(f: function()): nil
-   self.level = self.level + 1
-   f()
-   self.level = self.level - 1
-end
-
 function Inspector:tabify(): nil
    self:puts(self.newline,
    string.rep(self.indent, self.level))
@@ -246,11 +239,11 @@ end
 
 function Inspector:getId(v: any): string
    local id: integer = self.ids[v]
+   local ids = self.ids
    if not id then
       local tv: string = type(v)
-      id              = (self.maxIds[tv] or 0) + 1
-      self.maxIds[tv] = id
-      self.ids[v]     = id
+      id = (ids[tv] or 0) + 1
+      ids[v], ids[tv] = id, id
    end
    return tostring(id)
 end
@@ -352,7 +345,6 @@ function inspect.inspect(root: any, options: inspect.Options): string
       level            = 0,
       buffer           = {},
       ids              = {},
-      maxIds           = {},
       newline          = newline,
       indent           = indent,
       tableAppearances = countTableAppearances(root)
