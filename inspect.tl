@@ -230,66 +230,6 @@ function Inspector:getId(v: any): string
    return tostring(id)
 end
 
-function Inspector:putKey(k: any): nil
-   if isIdentifier(k) then
-      self:puts(k as string)
-      return
-   end
-   self:puts("[")
-   self:putValue(k)
-   self:puts("]")
-end
-
-function Inspector:putTable(t: table): nil
-   if t == inspect.KEY or t == inspect.METATABLE then
-      self:puts(tostring(t))
-   elseif self.level >= self.depth then
-      self:puts('{...}')
-   else
-      if self.refs[t] > 1 then self:puts('<', self:getId(t), '>') end
-
-         local keys, keysLen, seqLen = getKeys(t)
-
-      self:puts('{')
-      self.level = self.level + 1
-
-      local count = 0
-      for i=1, sequenceLength do
-        if count > 0 then self:puts(',') end
-        self:puts(' ')
-        self:putValue(t[i])
-        count = count + 1
-      end
-
-      for i=1, nonSequentialKeysLength do
-        local k = nonSequentialKeys[i]
-        if count > 0 then self:puts(',') end
-        self:tabify()
-        self:putKey(k)
-        self:puts(' = ')
-        self:putValue(t[k])
-        count = count + 1
-      end
-
-      if type(mt) == 'table' then
-        if count > 0 then self:puts(',') end
-        self:tabify()
-        self:puts('<metatable> = ')
-        self:putValue(mt)
-      end
-
-      self.level = self.level - 1
-
-      if nonSequentialKeysLength > 0 or type(mt) == 'table' then -- result is multi-lined. Justify closing }
-         self:tabify()
-      elseif sequenceLength > 0 then -- array tables have one extra space before closing }
-         self:puts(' ')
-      end
-
-      self:puts('}')
-   end
-end
-
 function Inspector:putValue(v: any)
    local tv: string = type(v)
    if tv == 'string' then
@@ -298,7 +238,63 @@ function Inspector:putValue(v: any)
           tv == 'cdata' or tv == 'ctype' then
       self:puts(tostring(v as number))
    elseif tv == 'table' and not self.ids[v] then
-      self:putTable(v as table)
+      local t = v as table
+
+      if t == inspect.KEY or t == inspect.METATABLE then
+         self:puts(tostring(t))
+      elseif self.level >= self.depth then
+         self:puts('{...}')
+      else
+         if self.refs[t] > 1 then self:puts('<', self:getId(t), '>') end
+
+         local keys, keysLen, seqLen = getKeys(t)
+
+         self:puts('{')
+         self.level = self.level + 1
+
+         local count = 0
+         for i=1, seqLen do
+           if count > 0 then self:puts(',') end
+           self:puts(' ')
+           self:putValue(t[i])
+           count = count + 1
+         end
+
+         for i = 1, keysLen do
+           local k = keys[i]
+           if count > 0 then self:puts(',') end
+           self:tabify()
+           if isIdentifier(k) then
+             self:puts(k as string)
+           else
+             self:puts("[")
+             self:putValue(k)
+             self:puts("]")
+           end
+           self:puts(' = ')
+           self:putValue(t[k])
+           count = count + 1
+         end
+
+         local mt = getmetatable(t)
+         if type(mt) == 'table' then
+           if count > 0 then self:puts(',') end
+           self:tabify()
+           self:puts('<metatable> = ')
+           self:putValue(mt)
+         end
+
+         self.level = self.level - 1
+
+         if keysLen > 0 or type(mt) == 'table' then -- result is multi-lined. Justify closing }
+           self:tabify()
+         elseif seqLen > 0 then -- array tables have one extra space before closing }
+           self:puts(' ')
+         end
+
+         self:puts('}')
+       end
+
    else
       self:puts('<', tv, ' ', self:getId(v), '>')
    end
