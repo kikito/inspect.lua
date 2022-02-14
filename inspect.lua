@@ -143,23 +143,19 @@ local function getNonSequentialKeys(t)
    return keys, keysLength, sequenceLength
 end
 
-local function countTableAppearances(t, tableAppearances)
-   tableAppearances = tableAppearances or {}
-
-   if type(t) == "table" then
-      if not tableAppearances[t] then
-         tableAppearances[t] = 1
-         for k, v in rawpairs(t) do
-            countTableAppearances(k, tableAppearances)
-            countTableAppearances(v, tableAppearances)
+local function countRefs(x, refs)
+   if type(x) == "table" then
+      if not refs[x] then
+         refs[x] = 1
+         for k, v in rawpairs(x) do
+            countRefs(k, refs)
+            countRefs(v, refs)
          end
-         countTableAppearances(getmetatable(t), tableAppearances)
+         countRefs(getmetatable(x), refs)
       else
-         tableAppearances[t] = tableAppearances[t] + 1
+         refs[x] = refs[x] + 1
       end
    end
-
-   return tableAppearances
 end
 
 local function makePath(path, a, b)
@@ -266,7 +262,7 @@ function Inspector:putTable(t)
    elseif self.level >= self.depth then
       self:puts('{...}')
    else
-      if self.tableAppearances[t] > 1 then self:puts('<', self:getId(t), '>') end
+      if self.refs[t] > 1 then self:puts('<', self:getId(t), '>') end
 
       local nonSequentialKeys, nonSequentialKeysLength, sequenceLength = getNonSequentialKeys(t)
       local mt = getmetatable(t)
@@ -340,6 +336,9 @@ function inspect.inspect(root, options)
       root = processRecursive(process, root, {}, {})
    end
 
+   local refs = {}
+   countRefs(root, refs)
+
    local inspector = setmetatable({
       depth = depth,
       level = 0,
@@ -347,7 +346,7 @@ function inspect.inspect(root, options)
       ids = {},
       newline = newline,
       indent = indent,
-      tableAppearances = countTableAppearances(root),
+      refs = refs,
    }, Inspector_mt)
 
    inspector:putValue(root)
