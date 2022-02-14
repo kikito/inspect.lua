@@ -229,10 +229,6 @@ function Inspector:tabify()
    string.rep(self.indent, self.level))
 end
 
-function Inspector:alreadyVisited(v)
-   return self.ids[v] ~= nil
-end
-
 function Inspector:getId(v)
    local id = self.ids[v]
    local ids = self.ids
@@ -257,8 +253,6 @@ end
 function Inspector:putTable(t)
    if t == inspect.KEY or t == inspect.METATABLE then
       self:puts(tostring(t))
-   elseif self:alreadyVisited(t) then
-      self:puts('<table ', self:getId(t), '>')
    elseif self.level >= self.depth then
       self:puts('{...}')
    else
@@ -314,7 +308,7 @@ function Inspector:putValue(v)
    elseif tv == 'number' or tv == 'boolean' or tv == 'nil' or
       tv == 'cdata' or tv == 'ctype' then
       self:puts(tostring(v))
-   elseif tv == 'table' then
+   elseif tv == 'table' and not self.ids[v] then
       self:putTable(v)
    else
       self:puts('<', tv, ' ', self:getId(v), '>')
