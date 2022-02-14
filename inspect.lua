@@ -114,29 +114,23 @@ local function sortKeys(a, b)
    return dta == dtb and ta < tb or dta < dtb
 end
 
+local function getKeys(t)
 
-
-local function getSequenceLength(t)
-   local len = 1
-   local v = rawget(t, len)
-   while v ~= nil do
-      len = len + 1
-      v = rawget(t, len)
+   local seqLen = 1
+   while rawget(t, seqLen) ~= nil do
+      seqLen = seqLen + 1
    end
-   return len - 1
-end
+   seqLen = seqLen - 1
 
-local function getNonSequentialKeys(t)
-   local keys, keysLength = {}, 0
-   local sequenceLength = getSequenceLength(t)
-   for k, _ in rawpairs(t) do
-      if not isSequenceKey(k, sequenceLength) then
-         keysLength = keysLength + 1
-         keys[keysLength] = k
+   local keys, keysLen = {}, 0
+   for k in rawpairs(t) do
+      if not isSequenceKey(k, seqLen) then
+         keysLen = keysLen + 1
+         keys[keysLen] = k
       end
    end
    table.sort(keys, sortKeys)
-   return keys, keysLength, sequenceLength
+   return keys, keysLen, seqLen
 end
 
 local function countRefs(x, refs)
@@ -236,67 +230,6 @@ function Inspector:getId(v)
    return tostring(id)
 end
 
-function Inspector:putKey(k)
-   if isIdentifier(k) then
-      self:puts(k)
-      return
-   end
-   self:puts("[")
-   self:putValue(k)
-   self:puts("]")
-end
-
-function Inspector:putTable(t)
-   if t == inspect.KEY or t == inspect.METATABLE then
-      self:puts(tostring(t))
-   elseif self.level >= self.depth then
-      self:puts('{...}')
-   else
-      if self.refs[t] > 1 then self:puts('<', self:getId(t), '>') end
-
-      local nonSequentialKeys, nonSequentialKeysLength, sequenceLength = getNonSequentialKeys(t)
-      local mt = getmetatable(t)
-
-      self:puts('{')
-      self.level = self.level + 1
-
-      local count = 0
-      for i = 1, sequenceLength do
-         if count > 0 then self:puts(',') end
-         self:puts(' ')
-         self:putValue(t[i])
-         count = count + 1
-      end
-
-      for i = 1, nonSequentialKeysLength do
-         local k = nonSequentialKeys[i]
-         if count > 0 then self:puts(',') end
-         self:tabify()
-         self:putKey(k)
-         self:puts(' = ')
-         self:putValue(t[k])
-         count = count + 1
-      end
-
-      if type(mt) == 'table' then
-         if count > 0 then self:puts(',') end
-         self:tabify()
-         self:puts('<metatable> = ')
-         self:putValue(mt)
-      end
-
-      self.level = self.level - 1
-
-      if nonSequentialKeysLength > 0 or type(mt) == 'table' then
-         self:tabify()
-      elseif sequenceLength > 0 then
-         self:puts(' ')
-      end
-
-      self:puts('}')
-   end
-end
-
 function Inspector:putValue(v)
    local tv = type(v)
    if tv == 'string' then
@@ -305,7 +238,63 @@ function Inspector:putValue(v)
       tv == 'cdata' or tv == 'ctype' then
       self:puts(tostring(v))
    elseif tv == 'table' and not self.ids[v] then
-      self:putTable(v)
+      local t = v
+
+      if t == inspect.KEY or t == inspect.METATABLE then
+         self:puts(tostring(t))
+      elseif self.level >= self.depth then
+         self:puts('{...}')
+      else
+         if self.refs[t] > 1 then self:puts('<', self:getId(t), '>') end
+
+         local keys, keysLen, seqLen = getKeys(t)
+
+         self:puts('{')
+         self.level = self.level + 1
+
+         local count = 0
+         for i = 1, seqLen do
+            if count > 0 then self:puts(',') end
+            self:puts(' ')
+            self:putValue(t[i])
+            count = count + 1
+         end
+
+         for i = 1, keysLen do
+            local k = keys[i]
+            if count > 0 then self:puts(',') end
+            self:tabify()
+            if isIdentifier(k) then
+               self:puts(k)
+            else
+               self:puts("[")
+               self:putValue(k)
+               self:puts("]")
+            end
+            self:puts(' = ')
+            self:putValue(t[k])
+            count = count + 1
+         end
+
+         local mt = getmetatable(t)
+         if type(mt) == 'table' then
+            if count > 0 then self:puts(',') end
+            self:tabify()
+            self:puts('<metatable> = ')
+            self:putValue(mt)
+         end
+
+         self.level = self.level - 1
+
+         if keysLen > 0 or type(mt) == 'table' then
+            self:tabify()
+         elseif seqLen > 0 then
+            self:puts(' ')
+         end
+
+         self:puts('}')
+      end
+
    else
       self:puts('<', tv, ' ', self:getId(v), '>')
    end

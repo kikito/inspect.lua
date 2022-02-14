@@ -114,29 +114,23 @@ local function sortKeys(a:any, b:any): boolean
    return dta == dtb and ta < tb or dta < dtb
 end
 
--- For implementation reasons, the behavior of rawlen & # is "undefined" when
--- tables aren't pure sequences. So we implement our own # operator.
-local function getSequenceLength(t: table): integer
-   local len: integer = 1
-   local v: any = rawget(t, len)
-   while v ~= nil do
-      len = len + 1
-      v = rawget(t,len)
+local function getKeys(t: table): {any}, integer, integer
+   -- seqLen counts the "array-like" keys
+   local seqLen: integer = 1
+   while rawget(t, seqLen) ~= nil do
+     seqLen = seqLen + 1
    end
-   return len - 1
-end
+   seqLen = seqLen - 1
 
-local function getNonSequentialKeys(t: table): {any}, integer, integer
-   local keys, keysLength: {any}, integer = {}, 0
-   local sequenceLength: integer = getSequenceLength(t)
-   for k,_ in rawpairs(t) do
-      if not isSequenceKey(k, sequenceLength) then
-         keysLength = keysLength + 1
-         keys[keysLength] = k
+   local keys, keysLen: {any}, integer = {}, 0
+   for k in rawpairs(t) do
+      if not isSequenceKey(k, seqLen) then
+         keysLen = keysLen + 1
+         keys[keysLen] = k
       end
    end
    table.sort(keys, sortKeys)
-   return keys, keysLength, sequenceLength
+   return keys, keysLen, seqLen
 end
 
 local function countRefs(x: any, refs: {any:integer}): {any:integer}
@@ -222,7 +216,7 @@ end
 
 function Inspector:tabify(): nil
    self:puts(self.newline,
-   string.rep(self.indent, self.level))
+     string.rep(self.indent, self.level))
 end
 
 function Inspector:getId(v: any): string
@@ -254,8 +248,7 @@ function Inspector:putTable(t: table): nil
    else
       if self.refs[t] > 1 then self:puts('<', self:getId(t), '>') end
 
-      local nonSequentialKeys, nonSequentialKeysLength, sequenceLength = getNonSequentialKeys(t)
-      local mt = getmetatable(t)
+         local keys, keysLen, seqLen = getKeys(t)
 
       self:puts('{')
       self.level = self.level + 1
