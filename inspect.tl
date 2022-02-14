@@ -107,15 +107,11 @@ local function sortKeys(a:any, b:any): boolean
       return (a as string) < (b as string)
    end
 
-   local dta, dtb: integer, integer = defaultTypeOrders[ta], defaultTypeOrders[tb]
-   -- Two default types are compared according to the defaultTypeOrders table
-   if dta and dtb then return defaultTypeOrders[ta] < defaultTypeOrders[tb]
-   elseif dta     then return true  -- default types before custom ones
-   elseif dtb     then return false -- custom types after default ones
-   end
-
-   -- custom types are sorted out alphabetically
-   return ta < tb
+   local dta: integer = defaultTypeOrders[ta] or 100
+   local dtb: integer = defaultTypeOrders[tb] or 100
+   -- Default types are compared according to defaultTypeOrders
+   -- Custom types are compared alphabetically
+   return dta == dtb and ta < tb or dta < dtb
 end
 
 -- For implementation reasons, the behavior of rawlen & # is "undefined" when

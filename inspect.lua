@@ -107,15 +107,11 @@ local function sortKeys(a, b)
       return (a) < (b)
    end
 
-   local dta, dtb = defaultTypeOrders[ta], defaultTypeOrders[tb]
-
-   if dta and dtb then return defaultTypeOrders[ta] < defaultTypeOrders[tb]
-   elseif dta then return true
-   elseif dtb then return false
-   end
+   local dta = defaultTypeOrders[ta] or 100
+   local dtb = defaultTypeOrders[tb] or 100
 
 
-   return ta < tb
+   return dta == dtb and ta < tb or dta < dtb
 end
 
 
