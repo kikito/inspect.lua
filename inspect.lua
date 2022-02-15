@@ -209,19 +209,8 @@ local Inspector = {}
 
 local Inspector_mt = { __index = Inspector }
 
-function Inspector:puts(a, b, c, d, e)
-   local buffer = self.buffer
-   local len = #buffer
-   buffer[len + 1] = a
-   buffer[len + 2] = b
-   buffer[len + 3] = c
-   buffer[len + 4] = d
-   buffer[len + 5] = e
-end
-
 function Inspector:tabify()
-   self:puts(self.newline,
-   string.rep(self.indent, self.level))
+   self.puts(self.newline .. rep(self.indent, self.level))
 end
 
 function Inspector:getId(v)
@@ -236,56 +225,57 @@ function Inspector:getId(v)
 end
 
 function Inspector:putValue(v)
+   local puts = self.puts
    local tv = type(v)
    if tv == 'string' then
-      self:puts(smartQuote(escape(v)))
+      puts(smartQuote(escape(v)))
    elseif tv == 'number' or tv == 'boolean' or tv == 'nil' or
       tv == 'cdata' or tv == 'ctype' then
-      self:puts(tostring(v))
+      puts(tostring(v))
    elseif tv == 'table' and not self.ids[v] then
       local t = v
 
       if t == inspect.KEY or t == inspect.METATABLE then
-         self:puts(tostring(t))
+         puts(tostring(t))
       elseif self.level >= self.depth then
-         self:puts('{...}')
+         puts('{...}')
       else
-         if self.refs[t] > 1 then self:puts('<', self:getId(t), '>') end
+         if self.refs[t] > 1 then puts('<' .. self:getId(t) .. '>') end
 
          local keys, keysLen, seqLen = getKeys(t)
 
-         self:puts('{')
+         puts('{')
          self.level = self.level + 1
 
          local count = 0
          for i = 1, seqLen do
-            if count > 0 then self:puts(',') end
-            self:puts(' ')
+            if count > 0 then puts(',') end
+            puts(' ')
             self:putValue(t[i])
             count = count + 1
          end
 
          for i = 1, keysLen do
             local k = keys[i]
-            if count > 0 then self:puts(',') end
+            if count > 0 then puts(',') end
             self:tabify()
             if isIdentifier(k) then
-               self:puts(k)
+               puts(k)
             else
-               self:puts("[")
+               puts("[")
                self:putValue(k)
-               self:puts("]")
+               puts("]")
             end
-            self:puts(' = ')
+            puts(' = ')
             self:putValue(t[k])
             count = count + 1
          end
 
          local mt = getmetatable(t)
          if type(mt) == 'table' then
-            if count > 0 then self:puts(',') end
+            if count > 0 then puts(',') end
             self:tabify()
-            self:puts('<metatable> = ')
+            puts('<metatable> = ')
             self:putValue(mt)
          end
 
@@ -294,14 +284,14 @@ function Inspector:putValue(v)
          if keysLen > 0 or type(mt) == 'table' then
             self:tabify()
          elseif seqLen > 0 then
-            self:puts(' ')
+            puts(' ')
          end
 
-         self:puts('}')
+         puts('}')
       end
 
    else
-      self:puts('<', tv, ' ', self:getId(v), '>')
+      puts('<' .. tv .. ' ' .. self:getId(v) .. '>')
    end
 end
 
@@ -323,10 +313,17 @@ function inspect.inspect(root, options)
    local refs = {}
    countRefs(root, refs)
 
+   local buf = {}
+   local blen = 0
+   local puts = function(str)
+      blen = blen + 1
+      buf[blen] = str
+   end
+
    local inspector = setmetatable({
       depth = depth,
       level = 0,
-      buffer = {},
+      puts = puts,
       ids = {},
       newline = newline,
       indent = indent,
@@ -335,7 +332,7 @@ function inspect.inspect(root, options)
 
    inspector:putValue(root)
 
-   return table.concat(inspector.buffer)
+   return table.concat(buf)
 end
 
 setmetatable(inspect, {

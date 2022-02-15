@@ -200,28 +200,17 @@ end
 local type Inspector = record
    depth: integer
    level: integer
-   buffer: {string}
    ids: {any:integer}
    newline: string
    indent: string
    refs: {table: integer}
+   puts: function(string)
 end
 
 local Inspector_mt = {__index = Inspector}
 
-function Inspector:puts(a:string, b:string, c:string, d:string, e:string): nil
-   local buffer: {string} = self.buffer
-   local len: integer     = #buffer
-   buffer[len+1] = a
-   buffer[len+2] = b
-   buffer[len+3] = c
-   buffer[len+4] = d
-   buffer[len+5] = e
-end
-
 function Inspector:tabify(): nil
-   self:puts(self.newline,
-     string.rep(self.indent, self.level))
+   self.puts(self.newline .. rep(self.indent, self.level))
 end
 
 function Inspector:getId(v: any): string
@@ -236,56 +225,57 @@ function Inspector:getId(v: any): string
 end
 
 function Inspector:putValue(v: any)
+   local puts = self.puts
    local tv: string = type(v)
    if tv == 'string' then
-      self:puts(smartQuote(escape(v as string)))
+      puts(smartQuote(escape(v as string)))
    elseif tv == 'number' or tv == 'boolean' or tv == 'nil' or
           tv == 'cdata' or tv == 'ctype' then
-      self:puts(tostring(v as number))
+      puts(tostring(v as number))
    elseif tv == 'table' and not self.ids[v] then
       local t = v as table
 
       if t == inspect.KEY or t == inspect.METATABLE then
-         self:puts(tostring(t))
+         puts(tostring(t))
       elseif self.level >= self.depth then
-         self:puts('{...}')
+         puts('{...}')
       else
-         if self.refs[t] > 1 then self:puts('<', self:getId(t), '>') end
+         if self.refs[t] > 1 then puts('<' .. self:getId(t) .. '>') end
 
          local keys, keysLen, seqLen = getKeys(t)
 
-         self:puts('{')
+         puts('{')
          self.level = self.level + 1
 
          local count = 0
          for i=1, seqLen do
-           if count > 0 then self:puts(',') end
-           self:puts(' ')
+           if count > 0 then puts(',') end
+           puts(' ')
            self:putValue(t[i])
            count = count + 1
          end
 
          for i = 1, keysLen do
            local k = keys[i]
-           if count > 0 then self:puts(',') end
+           if count > 0 then puts(',') end
            self:tabify()
            if isIdentifier(k) then
-             self:puts(k as string)
+             puts(k as string)
            else
-             self:puts("[")
+             puts("[")
              self:putValue(k)
-             self:puts("]")
+             puts("]")
            end
-           self:puts(' = ')
+           puts(' = ')
            self:putValue(t[k])
            count = count + 1
          end
 
          local mt = getmetatable(t)
          if type(mt) == 'table' then
-           if count > 0 then self:puts(',') end
+           if count > 0 then puts(',') end
            self:tabify()
-           self:puts('<metatable> = ')
+           puts('<metatable> = ')
            self:putValue(mt)
          end
 
@@ -294,14 +284,14 @@ function Inspector:putValue(v: any)
          if keysLen > 0 or type(mt) == 'table' then -- result is multi-lined. Justify closing }
            self:tabify()
          elseif seqLen > 0 then -- array tables have one extra space before closing }
-           self:puts(' ')
+           puts(' ')
          end
 
-         self:puts('}')
+         puts('}')
        end
 
    else
-      self:puts('<', tv, ' ', self:getId(v), '>')
+      puts('<' .. tv .. ' ' .. self:getId(v) .. '>')
    end
 end
 
@@ -323,10 +313,17 @@ function inspect.inspect(root: any, options: inspect.Options): string
    local refs = {}
    countRefs(root, refs)
 
+   local buf: {string} = {}
+   local blen: integer = 0
+   local puts = function(str: string)
+     blen = blen + 1
+     buf[blen] = str
+   end
+
    local inspector = setmetatable({
       depth            = depth,
       level            = 0,
-      buffer           = {},
+      puts             = puts,
       ids              = {},
       newline          = newline,
       indent           = indent,
@@ -335,7 +332,7 @@ function inspect.inspect(root: any, options: inspect.Options): string
 
    inspector:putValue(root)
 
-   return table.concat(inspector.buffer)
+   return table.concat(buf)
 end
 
 setmetatable(inspect, {
