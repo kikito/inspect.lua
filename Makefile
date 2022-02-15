@@ -1,3 +1,7 @@
+.PHONY: all dev gen check test perf
+
+LUA := $(shell luarocks config lua_interpreter)
+
 all: gen check test
 
 dev:
@@ -13,6 +17,9 @@ check:
 
 test:
 	busted
+
+perf:
+	$(shell luarocks config lua_interpreter) perf.lua
 
 
 
