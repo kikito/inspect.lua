@@ -48,6 +48,11 @@ inspect.KEY       = setmetatable({}, {__tostring = function(): string return 'in
 inspect.METATABLE = setmetatable({}, {__tostring = function(): string return 'inspect.METATABLE' end})
 
 local tostring = tostring
+local rep = string.rep
+local match = string.match
+local char = string.char
+local gsub = string.gsub
+local fmt = string.format
 
 local function rawpairs(t: table): function, table, nil
    return next, t, nil
@@ -56,10 +61,10 @@ end
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
 local function smartQuote(str: string): string
-   if str:match('"') and not str:match("'") then
+   if match(str, '"') and not match(str, "'") then
       return "'" .. str .. "'"
    end
-   return '"' .. str:gsub('"', '\\"') .. '"'
+   return '"' .. gsub(str, '"', '\\"') .. '"'
 end
 
 -- \a => '\\a', \0 => '\\0', 31 => '\31'
@@ -69,17 +74,17 @@ local shortControlCharEscapes: {string:string} = {
 }
 local longControlCharEscapes: {string:string} = {["\127"]="\127"} -- \a => nil, \0 => \000, 31 => \031
 for i=0, 31 do
-   local ch: string = string.char(i)
+   local ch: string = char(i)
    if not shortControlCharEscapes[ch] then
       shortControlCharEscapes[ch] = "\\"..i
-      longControlCharEscapes[ch]  = string.format("\\%03d", i)
+      longControlCharEscapes[ch]  = fmt("\\%03d", i)
    end
 end
 
 local function escape(str: string): string
-   return (str:gsub("\\", "\\\\")
-              :gsub("(%c)%f[0-9]", longControlCharEscapes)
-              :gsub("%c", shortControlCharEscapes))
+   return (gsub(gsub(gsub(str,"\\", "\\\\"),
+      "(%c)%f[0-9]", longControlCharEscapes),
+      "%c", shortControlCharEscapes))
 end
 
 local function isIdentifier(str: any): boolean

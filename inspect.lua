@@ -48,6 +48,11 @@ inspect.KEY = setmetatable({}, { __tostring = function() return 'inspect.KEY' en
 inspect.METATABLE = setmetatable({}, { __tostring = function() return 'inspect.METATABLE' end })
 
 local tostring = tostring
+local rep = string.rep
+local match = string.match
+local char = string.char
+local gsub = string.gsub
+local fmt = string.format
 
 local function rawpairs(t)
    return next, t, nil
@@ -56,10 +61,10 @@ end
 
 
 local function smartQuote(str)
-   if str:match('"') and not str:match("'") then
+   if match(str, '"') and not match(str, "'") then
       return "'" .. str .. "'"
    end
-   return '"' .. str:gsub('"', '\\"') .. '"'
+   return '"' .. gsub(str, '"', '\\"') .. '"'
 end
 
 
@@ -69,17 +74,17 @@ local shortControlCharEscapes = {
 }
 local longControlCharEscapes = { ["\127"] = "\127" }
 for i = 0, 31 do
-   local ch = string.char(i)
+   local ch = char(i)
    if not shortControlCharEscapes[ch] then
       shortControlCharEscapes[ch] = "\\" .. i
-      longControlCharEscapes[ch] = string.format("\\%03d", i)
+      longControlCharEscapes[ch] = fmt("\\%03d", i)
    end
 end
 
 local function escape(str)
-   return (str:gsub("\\", "\\\\"):
-   gsub("(%c)%f[0-9]", longControlCharEscapes):
-   gsub("%c", shortControlCharEscapes))
+   return (gsub(gsub(gsub(str, "\\", "\\\\"),
+   "(%c)%f[0-9]", longControlCharEscapes),
+   "%c", shortControlCharEscapes))
 end
 
 local function isIdentifier(str)
