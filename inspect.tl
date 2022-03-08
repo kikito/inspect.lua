@@ -240,7 +240,7 @@ function Inspector:putValue(v: any)
       elseif self.level >= self.depth then
          puts('{...}')
       else
-         if self.refs[t] > 1 then puts('<' .. self:getId(t) .. '>') end
+         if self.refs[t] > 1 then puts(fmt('<%d>', self:getId(t))) end
 
          local keys, keysLen, seqLen = getKeys(t)
 
@@ -287,7 +287,7 @@ function Inspector:putValue(v: any)
        end
 
    else
-      puts('<' .. tv .. ' ' .. self:getId(v) .. '>')
+      puts(fmt('<%s %d>', tv, self:getId(v)))
    end
 end
 
