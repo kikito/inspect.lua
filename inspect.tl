@@ -247,33 +247,29 @@ function Inspector:putValue(v: any)
          puts('{')
          self.level = self.level + 1
 
-         local count = 0
-         for i=1, seqLen do
-           if count > 0 then puts(',') end
-           puts(' ')
-           self:putValue(t[i])
-           count = count + 1
-         end
-
-         for i = 1, keysLen do
-           local k = keys[i]
-           if count > 0 then puts(',') end
-           self:tabify()
-           if isIdentifier(k) then
-             puts(k as string)
-           else
-             puts("[")
-             self:putValue(k)
-             puts("]")
-           end
-           puts(' = ')
-           self:putValue(t[k])
-           count = count + 1
+         for i = 1, seqLen + keysLen do
+            if i > 1 then puts(',') end
+            if i <= seqLen then
+               puts(' ')
+               self:putValue(t[i])
+            else
+               local k = keys[i - seqLen]
+               self:tabify()
+               if isIdentifier(k) then
+                 puts(k as string)
+               else
+                 puts("[")
+                 self:putValue(k)
+                 puts("]")
+               end
+               puts(' = ')
+               self:putValue(t[k])
+            end
          end
 
          local mt = getmetatable(t)
          if type(mt) == 'table' then
-           if count > 0 then puts(',') end
+           if seqLen + keysLen > 0 then puts(',') end
            self:tabify()
            puts('<metatable> = ')
            self:putValue(mt)
