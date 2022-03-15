@@ -193,7 +193,10 @@ local function processRecursive(process,
    return processed
 end
 
-
+local function puts(buf, str)
+   buf.n = buf.n + 1
+   buf[buf.n] = str
+end
 
 
 
@@ -207,10 +210,11 @@ local Inspector = {}
 
 
 
+
 local Inspector_mt = { __index = Inspector }
 
-function Inspector:tabify()
-   self.puts(self.newline .. rep(self.indent, self.level))
+local function tabify(inspector)
+   puts(inspector.buf, inspector.newline .. rep(inspector.indent, inspector.level))
 end
 
 function Inspector:getId(v)
@@ -225,69 +229,69 @@ function Inspector:getId(v)
 end
 
 function Inspector:putValue(v)
-   local puts = self.puts
+   local buf = self.buf
    local tv = type(v)
    if tv == 'string' then
-      puts(smartQuote(escape(v)))
+      puts(buf, smartQuote(escape(v)))
    elseif tv == 'number' or tv == 'boolean' or tv == 'nil' or
       tv == 'cdata' or tv == 'ctype' then
-      puts(tostring(v))
+      puts(buf, tostring(v))
    elseif tv == 'table' and not self.ids[v] then
       local t = v
 
       if t == inspect.KEY or t == inspect.METATABLE then
-         puts(tostring(t))
+         puts(buf, tostring(t))
       elseif self.level >= self.depth then
-         puts('{...}')
+         puts(buf, '{...}')
       else
-         if self.refs[t] > 1 then puts(fmt('<%d>', self:getId(t))) end
+         if self.refs[t] > 1 then puts(buf, fmt('<%d>', self:getId(t))) end
 
          local keys, keysLen, seqLen = getKeys(t)
 
-         puts('{')
+         puts(buf, '{')
          self.level = self.level + 1
 
          for i = 1, seqLen + keysLen do
-            if i > 1 then puts(',') end
+            if i > 1 then puts(buf, ',') end
             if i <= seqLen then
-               puts(' ')
+               puts(buf, ' ')
                self:putValue(t[i])
             else
                local k = keys[i - seqLen]
-               self:tabify()
+               tabify(self)
                if isIdentifier(k) then
-                  puts(k)
+                  puts(buf, k)
                else
-                  puts("[")
+                  puts(buf, "[")
                   self:putValue(k)
-                  puts("]")
+                  puts(buf, "]")
                end
-               puts(' = ')
+               puts(buf, ' = ')
                self:putValue(t[k])
             end
          end
 
          local mt = getmetatable(t)
          if type(mt) == 'table' then
-            if seqLen + keysLen > 0 then puts(',') end
-            self:tabify()
-            puts('<metatable> = ')
+            if seqLen + keysLen > 0 then puts(buf, ',') end
+            tabify(self)
+            puts(buf, '<metatable> = ')
             self:putValue(mt)
          end
 
          self.level = self.level - 1
 
          if keysLen > 0 or type(mt) == 'table' then
-            self:tabify()
+            tabify(self)
          elseif seqLen > 0 then
-            puts(' ')
+            puts(buf, ' ')
          end
 
-         puts('}')
+         puts(buf, '}')
       end
 
    else
-      puts(fmt('<%s %d>', tv, self:getId(v)))
+      puts(buf, fmt('<%s %d>', tv, self:getId(v)))
    end
 end
 
@@ -309,17 +313,10 @@ function inspect.inspect(root, options)
    local refs = {}
    countRefs(root, refs)
 
-   local buf = {}
-   local blen = 0
-   local puts = function(str)
-      blen = blen + 1
-      buf[blen] = str
-   end
-
    local inspector = setmetatable({
+      buf = { n = 0 },
       depth = depth,
       level = 0,
-      puts = puts,
       ids = {},
       newline = newline,
       indent = indent,
@@ -328,7 +325,7 @@ function inspect.inspect(root, options)
 
    inspector:putValue(root)
 
-   return table.concat(buf)
+   return table.concat(inspector.buf)
 end
 
 setmetatable(inspect, {
