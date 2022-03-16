@@ -138,17 +138,17 @@ local function getKeys(t: table): {any}, integer, integer
    return keys, keysLen, seqLen
 end
 
-local function countRefs(x: any, refs: {any:integer}): {any:integer}
+local function countCycles(x: any, cycles: {any:integer}): nil
    if x is table then
-      if not refs[x] then
-         refs[x] = 1
-         for k,v in rawpairs(x) do
-            countRefs(k, refs)
-            countRefs(v, refs)
-         end
-         countRefs(getmetatable(x), refs)
+      if cycles[x] then
+         cycles[x] = cycles[x] + 1
       else
-         refs[x] = refs[x] + 1
+         cycles[x] = 1
+         for k,v in rawpairs(x) do
+            countCycles(k, cycles)
+            countCycles(v, cycles)
+         end
+         countCycles(getmetatable(x), cycles)
       end
    end
 end
@@ -207,7 +207,7 @@ local type Inspector = record
    ids: {any:integer}
    newline: string
    indent: string
-   refs: {table: integer}
+   cycles: {table: integer}
    puts: function(string)
 end
 
@@ -244,7 +244,7 @@ function Inspector:putValue(v: any)
       elseif self.level >= self.depth then
          puts(buf, '{...}')
       else
-         if self.refs[t] > 1 then puts(buf, fmt('<%d>', self:getId(t))) end
+         if self.cycles[t] > 1 then puts(buf, fmt('<%d>', self:getId(t))) end
 
          local keys, keysLen, seqLen = getKeys(t)
 
@@ -310,17 +310,17 @@ function inspect.inspect(root: any, options: inspect.Options): string
       root = processRecursive(process, root, {}, {})
    end
 
-   local refs = {}
-   countRefs(root, refs)
+   local cycles = {}
+   countCycles(root, cycles)
 
    local inspector = setmetatable({
       buf              = { n = 0 },
+      ids              = {},
+      cycles           = cycles,
       depth            = depth,
       level            = 0,
-      ids              = {},
       newline          = newline,
       indent           = indent,
-      refs             = refs,
    } as Inspector, Inspector_mt)
 
    inspector:putValue(root)
