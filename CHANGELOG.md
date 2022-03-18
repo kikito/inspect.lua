@@ -1,3 +1,8 @@
+## v3.1.3
+
+* A minimal performance test was introduced. Several refactors were introduced, which seem to make inspect.lua faster now.
+* inspect.lua was rewritten using Teal
+
 ## v3.1.2
 
 * DEL character is properly escaped in strings (#49, thanks @4mig4 and @LoganDark for the bug report)
