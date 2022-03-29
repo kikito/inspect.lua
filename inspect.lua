@@ -14,9 +14,6 @@ local inspect = {Options = {}, }
 
 
 
-
-
-
 inspect._VERSION = 'inspect.lua 3.1.0'
 inspect._URL = 'http://github.com/kikito/inspect.lua'
 inspect._DESCRIPTION = 'human-readable representations of tables'
@@ -153,46 +150,6 @@ local function countCycles(x, cycles)
    end
 end
 
-local function makePath(path, a, b)
-   local newPath = {}
-   local len = #path
-   for i = 1, len do newPath[i] = path[i] end
-
-   newPath[len + 1] = a
-   newPath[len + 2] = b
-
-   return newPath
-end
-
-
-local function processRecursive(process,
-   item,
-   path,
-   visited)
-   if item == nil then return nil end
-   if visited[item] then return visited[item] end
-
-   local processed = process(item, path)
-   if type(processed) == "table" then
-      local processedCopy = {}
-      visited[item] = processedCopy
-      local processedKey
-
-      for k, v in rawpairs(processed) do
-         processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY), visited)
-         if processedKey ~= nil then
-            processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey), visited)
-         end
-      end
-
-      local mt = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE), visited)
-      if type(mt) ~= 'table' then mt = nil end
-      setmetatable(processedCopy, mt)
-      processed = processedCopy
-   end
-   return processed
-end
-
 local function puts(buf, str)
    buf.n = buf.n + 1
    buf[buf.n] = str
@@ -304,11 +261,6 @@ function inspect.inspect(root, options)
    local depth = options.depth or (math.huge)
    local newline = options.newline or '\n'
    local indent = options.indent or '  '
-   local process = options.process
-
-   if process then
-      root = processRecursive(process, root, {}, {})
-   end
 
    local cycles = {}
    countCycles(root, cycles)

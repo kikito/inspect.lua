@@ -7,13 +7,10 @@ local record inspect
    KEY: table
    METATABLE: table
 
-   type ProcessFunction = function(any, {any}): any
-
    record Options
       depth: integer
       newline: string
       indent: string
-      process: ProcessFunction
    end
 end
 
@@ -153,46 +150,6 @@ local function countCycles(x: any, cycles: {any:integer}): nil
    end
 end
 
-local function makePath(path: {any}, a: any, b: any): {any}
-   local newPath: {any} = {}
-   local len: integer = #path
-   for i=1, len do newPath[i] = path[i] end
-
-   newPath[len + 1] = a
-   newPath[len + 2] = b
-
-   return newPath
-end
-
-
-local function processRecursive(process: inspect.ProcessFunction,
-                                item: any,
-                                path: {any},
-                                visited: {any:any}): any
-   if item == nil then return nil end
-   if visited[item] then return visited[item] end
-
-   local processed: any = process(item, path)
-   if processed is table then
-      local processedCopy = {}
-      visited[item] = processedCopy
-      local processedKey: any
-
-      for k,v in rawpairs(processed) do
-         processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY), visited)
-         if processedKey ~= nil then
-            processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey), visited)
-         end
-      end
-
-      local mt  = processRecursive(process, getmetatable(processed), makePath(path, inspect.METATABLE), visited)
-      if type(mt) ~= 'table' then mt = nil end -- ignore not nil/table __metatable field
-      setmetatable(processedCopy, mt as metatable<{any:any}>)
-      processed = processedCopy
-   end
-   return processed
-end
-
 local function puts(buf: table, str:string): nil
    buf.n = buf.n as integer + 1
    buf[buf.n as integer] = str
@@ -304,11 +261,6 @@ function inspect.inspect(root: any, options: inspect.Options): string
    local depth: integer  = options.depth   or (math.huge as integer)
    local newline: string = options.newline or '\n'
    local indent: string  = options.indent  or '  '
-   local process: inspect.ProcessFunction = options.process
-
-   if process then
-      root = processRecursive(process, root, {}, {})
-   end
 
    local cycles = {}
    countCycles(root, cycles)
