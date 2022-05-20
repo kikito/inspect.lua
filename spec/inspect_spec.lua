@@ -262,6 +262,55 @@ describe( 'inspect', function()
       end)
     end)
 
+    describe('the override option', function()
+      it('changes how long strings are rendered, leaves values unaltered on nil', function()
+        local t = {short = "short", long = "a long string that should be shortened"}
+
+        assert.equal(unindent([[
+          {
+            long = "shortened",
+            short = "short"
+          }
+        ]]), inspect(t, {override = function(x)
+          if type(x) == "string" and #x > 5 then
+            return '"shortened"'
+          end
+        end}))
+      end)
+
+      it('overrides hash values', function()
+        local t = { b = 2, c = "a" }
+
+        assert.equal(unindent([[
+          {
+            b = 2,
+            c = "changed"
+          }
+        ]]), inspect(t, {override = function(x)
+          if x == "a" then
+            return '"changed"'
+          end
+        end}))
+      end)
+
+      it('can hide metatables', function()
+        local t = setmetatable({a = 1}, {__index = "a"})
+
+        assert.equal(unindent([[
+          {
+            a = 1,
+            <metatable> = {_}
+          }
+        ]]), inspect(t, {override = function(x)
+          if type(x) == "table" and x.__index then
+            return "{_}"
+          end
+        end}))
+      end)
+
+
+    end)
+
     describe('metatables', function()
 
       it('includes the metatable as an extra hash attribute', function()

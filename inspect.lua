@@ -13,7 +13,6 @@ local inspect = {Options = {}, }
 
 
 
-
 inspect._VERSION = 'inspect.lua 3.1.0'
 inspect._URL = 'http://github.com/kikito/inspect.lua'
 inspect._DESCRIPTION = 'human-readable representations of tables'
@@ -41,8 +40,6 @@ inspect._LICENSE = [[
   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
-inspect.KEY = setmetatable({}, { __tostring = function() return 'inspect.KEY' end })
-inspect.METATABLE = setmetatable({}, { __tostring = function() return 'inspect.METATABLE' end })
 
 local tostring = tostring
 local rep = string.rep
@@ -50,6 +47,7 @@ local match = string.match
 local char = string.char
 local gsub = string.gsub
 local fmt = string.format
+local concat = table.concat
 
 local function rawpairs(t)
    return next, t, nil
@@ -150,33 +148,8 @@ local function countCycles(x, cycles)
    end
 end
 
-local function puts(buf, str)
-   buf.n = buf.n + 1
-   buf[buf.n] = str
-end
-
-
-
-local Inspector = {}
-
-
-
-
-
-
-
-
-
-
-local Inspector_mt = { __index = Inspector }
-
-local function tabify(inspector)
-   puts(inspector.buf, inspector.newline .. rep(inspector.indent, inspector.level))
-end
-
-function Inspector:getId(v)
-   local id = self.ids[v]
-   local ids = self.ids
+local function getId(ids, v)
+   local id = ids[v]
    if not id then
       local tv = type(v)
       id = (ids[tv] or 0) + 1
@@ -185,61 +158,77 @@ function Inspector:getId(v)
    return tostring(id)
 end
 
-function Inspector:putValue(v)
-   local buf = self.buf
+local function puts(buf, str)
+   buf.n = buf.n + 1
+   buf[buf.n] = str
+end
+
+local function tabify(buf, level, options)
+   local newline = options and options.newline or "\n"
+   local indent = options and options.indent or "  "
+   puts(buf, newline .. rep(indent, level))
+end
+
+local function putValue(v, buf, cycles, ids, level,
+   options)
+
+   if options and options.override then
+      local s = options.override(v)
+      if s ~= nil then
+         puts(buf, s)
+         return
+      end
+   end
+
    local tv = type(v)
    if tv == 'string' then
       puts(buf, smartQuote(escape(v)))
    elseif tv == 'number' or tv == 'boolean' or tv == 'nil' or
       tv == 'cdata' or tv == 'ctype' then
       puts(buf, tostring(v))
-   elseif tv == 'table' and not self.ids[v] then
+   elseif tv == 'table' and not ids[v] then
       local t = v
 
-      if t == inspect.KEY or t == inspect.METATABLE then
-         puts(buf, tostring(t))
-      elseif self.level >= self.depth then
+      local depth = options and options.depth
+      if depth and level >= depth then
          puts(buf, '{...}')
       else
-         if self.cycles[t] > 1 then puts(buf, fmt('<%d>', self:getId(t))) end
+         if cycles[t] > 1 then puts(buf, fmt('<%d>', getId(ids, t))) end
 
          local keys, keysLen, seqLen = getKeys(t)
 
+         local nextLevel = level + 1
          puts(buf, '{')
-         self.level = self.level + 1
-
          for i = 1, seqLen + keysLen do
             if i > 1 then puts(buf, ',') end
             if i <= seqLen then
                puts(buf, ' ')
-               self:putValue(t[i])
+               putValue(t[i], buf, cycles, ids, nextLevel, options)
             else
                local k = keys[i - seqLen]
-               tabify(self)
+               tabify(buf, level + 1, options)
                if isIdentifier(k) then
                   puts(buf, k)
                else
                   puts(buf, "[")
-                  self:putValue(k)
+                  putValue(k, buf, cycles, ids, nextLevel, options)
                   puts(buf, "]")
                end
                puts(buf, ' = ')
-               self:putValue(t[k])
+               putValue(t[k], buf, cycles, ids, nextLevel, options)
             end
          end
 
          local mt = getmetatable(t)
          if type(mt) == 'table' then
             if seqLen + keysLen > 0 then puts(buf, ',') end
-            tabify(self)
+            tabify(buf, level + 1, options)
             puts(buf, '<metatable> = ')
-            self:putValue(mt)
+            putValue(mt, buf, cycles, ids, nextLevel, options)
          end
 
-         self.level = self.level - 1
-
          if keysLen > 0 or type(mt) == 'table' then
-            tabify(self)
+            tabify(buf, level, options)
          elseif seqLen > 0 then
             puts(buf, ' ')
          end
@@ -248,7 +237,7 @@ function Inspector:putValue(v)
       end
 
    else
-      puts(buf, fmt('<%s %d>', tv, self:getId(v)))
+      puts(buf, fmt('<%s %d>', tv, getId(ids, v)))
    end
 end
 
@@ -256,28 +245,13 @@ end
 
 
 function inspect.inspect(root, options)
-   options = options or {}
-
-   local depth = options.depth or (math.huge)
-   local newline = options.newline or '\n'
-   local indent = options.indent or '  '
-
    local cycles = {}
    countCycles(root, cycles)
 
-   local inspector = setmetatable({
-      buf = { n = 0 },
-      ids = {},
-      cycles = cycles,
-      depth = depth,
-      level = 0,
-      newline = newline,
-      indent = indent,
-   }, Inspector_mt)
+   local buf = { n = 0 }
+   putValue(root, buf, cycles, {}, 0, options)
 
-   inspector:putValue(root)
-
-   return table.concat(inspector.buf)
+   return concat(buf)
 end
 
 setmetatable(inspect, {
