@@ -244,7 +244,7 @@ function Inspector:putValue(v)
       elseif self.level >= self.depth then
          puts(buf, '{...}')
       else
-         if not self.print_reference then
+         if self.print_reference then
             if self.cycles[t] > 1 then puts(buf, fmt('<%d>', self:getId(t))) end
          end
 
@@ -307,7 +307,7 @@ function inspect.inspect(root, options)
    local newline = options.newline or '\n'
    local indent = options.indent or '  '
    local process = options.process
-   local print_reference = options.print_reference or true
+   local print_reference = options.print_reference or options.print_reference == nil
 
    if process then
       root = processRecursive(process, root, {}, {})
