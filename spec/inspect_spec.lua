@@ -111,6 +111,13 @@ describe( 'inspect', function()
       end)
     end
 
+    it('escapes string keys that are not valid identifiers', function()
+      assert.equals(unindent([[{
+        ["if"] = true,
+        ["key with spaces"] = true
+      }]]), inspect({['if'] = true, ['key with spaces'] = true}))
+    end)
+
     it('works with simple dictionary tables', function()
       assert.equals("{\n  a = 1,\n  b = 2\n}", inspect({a = 1, b = 2}))
     end)
