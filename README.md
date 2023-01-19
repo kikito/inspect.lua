@@ -181,7 +181,7 @@ end
 assert(inspect(t, {process = remove_mt}) == "{ 1, 2, 3 }")
 ```
 
-The previous exaple only works for a particular metatable. If you want to make *all* metatables, you can use the `path` parameter to check
+The previous example only works for a particular metatable. If you want to make *all* metatables, you can use the `path` parameter to check
 wether the last element is `inspect.METATABLE`, and return `nil` instead of the item:
 
 ``` lua
