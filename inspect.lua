@@ -54,6 +54,13 @@ local char = string.char
 local gsub = string.gsub
 local fmt = string.format
 
+local _rawget
+if rawget then
+   _rawget = rawget
+else
+   _rawget = function(t, k) return t[k] end
+end
+
 local function rawpairs(t)
    return next, t, nil
 end
@@ -149,7 +156,7 @@ end
 local function getKeys(t)
 
    local seqLen = 1
-   while rawget(t, seqLen) ~= nil do
+   while _rawget(t, seqLen) ~= nil do
       seqLen = seqLen + 1
    end
    seqLen = seqLen - 1

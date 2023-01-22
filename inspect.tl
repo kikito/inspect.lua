@@ -54,6 +54,13 @@ local char = string.char
 local gsub = string.gsub
 local fmt = string.format
 
+local _rawget: function(table, any): any
+if rawget then
+   _rawget = rawget
+else
+   _rawget = function(t: table, k: any): any return t[k] end
+end
+
 local function rawpairs(t: table): function, table, nil
    return next, t, nil
 end
@@ -149,7 +156,7 @@ end
 local function getKeys(t: table): {any}, integer, integer
    -- seqLen counts the "array-like" keys
    local seqLen: integer = 1
-   while rawget(t, seqLen) ~= nil do
+   while _rawget(t, seqLen) ~= nil do
      seqLen = seqLen + 1
    end
    seqLen = seqLen - 1
