@@ -237,7 +237,7 @@ Contributing
 
 This project uses [Teal](https://github.com/teal-language/tl), a typed dialect of Lua (which generates plain lua files too)
 
-If you want to send a pull request to this project, first of all, thank you! You will need to install the. You can install all of them by running:
+If you want to send a pull request to this project, first of all, thank you! You will need to install the dependencies. You can install all of them by running:
 
 ```
 make dev
