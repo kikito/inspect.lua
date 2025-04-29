@@ -61,7 +61,7 @@ assert(inspect({a={b=2}}) == [[{
 Functions, userdata and any other custom types from Luajit are simply as `<function x>`, `<userdata x>`, etc.:
 
 ```lua
-assert(inspect({ f = print, ud = some_user_data, thread = a_thread} ) == [[{
+assert(inspect({ f = print, u = some_user_data, thread = a_thread} ) == [[{
   f = <function 1>,
   u = <userdata 1>,
   thread = <thread 1>
