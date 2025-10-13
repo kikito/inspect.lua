@@ -423,11 +423,7 @@ describe( 'inspect', function()
         assert.equals(unindent('{}'), inspector(foo))
         assert.equals(unindent('{}'), inspector(bar))
         assert.equals(unindent('{}'), inspector(baz))
-        assert.equals(unindent([[
-          {
-            <metatable> = {}
-          }
-        ]]), inspector(spam))
+        assert.equals(unindent('{}'), inspector(spam))
         assert.equals(unindent([[
           {
             <metatable> = {}
