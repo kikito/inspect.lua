@@ -94,30 +94,12 @@ local function escape(str: string): string
       "%c", shortControlCharEscapes))
 end
 
-local luaKeywords: {string:boolean} = {
-  ['and'] = true,
-  ['break'] = true,
-  ['do'] = true,
-  ['else'] = true,
-  ['elseif'] = true,
-  ['end'] = true,
-  ['false'] = true,
-  ['for'] = true,
-  ['function'] = true,
-  ['goto'] = true,
-  ['if'] = true,
-  ['in'] = true,
-  ['local'] = true,
-  ['nil'] = true,
-  ['not'] = true,
-  ['or'] = true,
-  ['repeat'] = true,
-  ['return'] = true,
-  ['then'] = true,
-  ['true'] = true,
-  ['until'] = true,
-  ['while'] = true,
-}
+local luaKeywords: {string:boolean} = {}
+for k in ([[ and break do else elseif end false for function goto if
+             in local nil not or repeat return then true until while
+]]):gmatch('%w+') do
+  luaKeywords[k] = true
+end
 
 local function isIdentifier(str: any): boolean
    return str is string
