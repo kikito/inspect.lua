@@ -154,17 +154,19 @@ local function getKeys(t: table): {any}, integer, integer
    return keys, keysLen, seqLen
 end
 
-local function countCycles(x: any, cycles: {any:integer}): nil
+local function countCycles(x: any, cycles: {any:integer}, depth: integer): nil
    if x is table then
       if cycles[x] then
          cycles[x] = cycles[x] + 1
       else
          cycles[x] = 1
-         for k,v in rawpairs(x) do
-            countCycles(k, cycles)
-            countCycles(v, cycles)
+         if depth > 0 then
+            for k,v in rawpairs(x) do
+               countCycles(k, cycles, depth - 1)
+               countCycles(v, cycles, depth - 1)
+            end
+            countCycles(getmetatable(x), cycles, depth - 1)
          end
-         countCycles(getmetatable(x), cycles)
       end
    end
 end
@@ -327,7 +329,7 @@ function inspect.inspect(root: any, options: inspect.Options): string
    end
 
    local cycles = {}
-   countCycles(root, cycles)
+   countCycles(root, cycles, depth)
 
    local inspector = setmetatable({
       buf              = { n = 0 },
