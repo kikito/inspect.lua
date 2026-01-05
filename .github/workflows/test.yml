@@ -44,3 +44,7 @@ jobs:
     - name: test
       run: |
         busted -o utfTerminal
+
+    - name: perf
+      run: |
+        make perf
