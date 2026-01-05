@@ -2,7 +2,7 @@
 
 LUA := $(shell luarocks config variables.LUA)
 
-all: gen check test
+all: gen check test perf
 
 dev:
 	luarocks install tl

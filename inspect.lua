@@ -1,4 +1,4 @@
-local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local math = _tl_compat and _tl_compat.math or math; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local type = type
+local _tl_compat; if (tonumber((_VERSION or ''):match('[%d.]*$')) or 0) < 5.3 then local p, m = pcall(require, 'compat53.module'); if p then _tl_compat = m end end; local math = _tl_compat and _tl_compat.math or math; local pcall = _tl_compat and _tl_compat.pcall or pcall; local string = _tl_compat and _tl_compat.string or string; local table = _tl_compat and _tl_compat.table or table; local type = type
 local inspect = { Options = {} }
 
 
@@ -53,6 +53,33 @@ local match = string.match
 local char = string.char
 local gsub = string.gsub
 local fmt = string.format
+
+
+local sbavailable, stringbuffer = pcall(require, "string.buffer")
+local buffnew
+local puts
+local render
+
+if sbavailable then
+   buffnew = stringbuffer.new
+   puts = function(buf, str)
+      buf:put(str)
+   end
+   render = function(buf)
+      return buf:get()
+   end
+else
+   buffnew = function()
+      return { n = 0 }
+   end
+   puts = function(buf, str)
+      buf.n = buf.n + 1
+      buf[buf.n] = str
+   end
+   render = function(buf)
+      return table.concat(buf)
+   end
+end
 
 local _rawget
 if rawget then
@@ -211,11 +238,6 @@ local function processRecursive(process,
    return processed
 end
 
-local function puts(buf, str)
-   buf.n = buf.n + 1
-   buf[buf.n] = str
-end
-
 
 
 local Inspector = {}
@@ -332,7 +354,7 @@ function inspect.inspect(root, options)
    countCycles(root, cycles, depth)
 
    local inspector = setmetatable({
-      buf = { n = 0 },
+      buf = buffnew(),
       ids = {},
       cycles = cycles,
       depth = depth,
@@ -343,7 +365,7 @@ function inspect.inspect(root, options)
 
    inspector:putValue(root)
 
-   return table.concat(inspector.buf)
+   return render(inspector.buf)
 end
 
 setmetatable(inspect, {
