@@ -54,6 +54,33 @@ local char = string.char
 local gsub = string.gsub
 local fmt = string.format
 
+-- String buffer support (LuaJIT optimization)
+local sbavailable, stringbuffer = pcall(require, "string.buffer")
+local buffnew: function(): table
+local puts: function(table, string)
+local render: function(table): string
+
+if sbavailable then
+  buffnew = stringbuffer.new
+  puts = function(buf: table, str: string)
+    buf:put(str)
+  end
+  render = function(buf: table): string
+    return buf:get()
+  end
+else
+  buffnew = function(): table
+    return { n = 0 }
+  end
+  puts = function(buf: table, str: string)
+    buf.n = buf.n as integer + 1
+    buf[buf.n as integer] = str
+  end
+  render = function(buf: table): string
+    return table.concat(buf as {string})
+  end
+end
+
 local _rawget: function(table, any): any
 if rawget then
    _rawget = rawget
@@ -211,11 +238,6 @@ local function processRecursive(process: inspect.ProcessFunction,
    return processed
 end
 
-local function puts(buf: table, str:string): nil
-   buf.n = buf.n as integer + 1
-   buf[buf.n as integer] = str
-end
-
 -------------------------------------------------------------------
 
 local type Inspector = record
@@ -332,7 +354,7 @@ function inspect.inspect(root: any, options: inspect.Options): string
    countCycles(root, cycles, depth)
 
    local inspector = setmetatable({
-      buf              = { n = 0 },
+      buf              = buffnew(),
       ids              = {},
       cycles           = cycles,
       depth            = depth,
@@ -343,7 +365,7 @@ function inspect.inspect(root: any, options: inspect.Options): string
 
    inspector:putValue(root)
 
-   return table.concat(inspector.buf as {string})
+   return render(inspector.buf)
 end
 
 setmetatable(inspect, {
