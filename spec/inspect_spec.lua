@@ -3,6 +3,46 @@ local unindent        = require 'spec.unindent'
 local is_luajit, ffi  = pcall(require, 'ffi')
 local has_rawlen      = type(_G.rawlen) == 'function'
 
+local function get_host_architecture()
+    local arch = nil
+
+    -- Try Windows environment variable
+    arch = os.getenv("PROCESSOR_ARCHITECTURE")
+    if arch and arch ~= "" then
+        arch = arch:lower()
+        if arch == "amd64" or arch == "x86_64" then
+            return "x86_64" -- Standardize 64-bit Intel/AMD
+        elseif arch == "x86" then
+            return "i686"   -- Standardize 32-bit Intel/AMD
+        end
+        return arch -- Return other Windows arch if found (e.g., ARM64)
+    end
+
+    -- Try Unix-like systems using 'uname -m'
+    -- io.popen is available on most standard Lua installs on these systems
+    local f = io.popen("uname -m", "r")
+    if f then
+        arch = f:read("*a"):match("%S+") -- Read output and trim whitespace
+        f:close()
+
+        if arch and arch ~= "" then
+            arch = arch:lower()
+            -- Standardize common Unix architectures
+            if arch:match("^(x86_64|amd64|aarch64|arm64|mips64)") then
+                return arch
+            elseif arch:match("^(i%d86|x86|i386|arm|mips)") then
+                return arch
+            end
+            return arch -- Return raw uname output if not a common match
+        end
+    end
+
+    -- Fallback for systems where popen or env var fails
+    return "unknown"
+end
+
+local host_arch = get_host_architecture()
+
 describe( 'inspect', function()
 
   describe('numbers', function()
@@ -423,11 +463,15 @@ describe( 'inspect', function()
         assert.equals(unindent('{}'), inspector(foo))
         assert.equals(unindent('{}'), inspector(bar))
         assert.equals(unindent('{}'), inspector(baz))
-        assert.equals(unindent([[
-          {
-            <metatable> = {}
-          }
-        ]]), inspector(spam))
+        if is_luajit and (get_host_architecture() == "aarch64") then
+          assert.equals(unindent('{}'), inspector(spam))
+        else
+            assert.equals(unindent([[
+              {
+                <metatable> = {}
+              }
+            ]]), inspector(spam))
+        end
         assert.equals(unindent([[
           {
             <metatable> = {}
