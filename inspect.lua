@@ -17,7 +17,7 @@ local inspect = { Options = {} }
 
 
 
-inspect._VERSION = 'inspect.lua 3.1.0'
+inspect._VERSION = 'inspect.lua 3.1.3'
 inspect._URL = 'http://github.com/kikito/inspect.lua'
 inspect._DESCRIPTION = 'human-readable representations of tables'
 inspect._LICENSE = [[

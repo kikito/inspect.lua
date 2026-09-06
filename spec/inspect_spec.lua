@@ -5,6 +5,12 @@ local has_rawlen      = type(_G.rawlen) == 'function'
 
 describe( 'inspect', function()
 
+  describe('_VERSION', function()
+    it('matches the latest released version', function()
+      assert.equals('inspect.lua 3.1.3', inspect._VERSION)
+    end)
+  end)
+
   describe('numbers', function()
     it('works', function()
       assert.equals("1", inspect(1))
