@@ -248,7 +248,6 @@ local type Inspector = record
    newline: string
    indent: string
    cycles: {table: integer}
-   puts: function(string)
 end
 
 local Inspector_mt = {__index = Inspector}
