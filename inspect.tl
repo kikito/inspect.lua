@@ -257,7 +257,7 @@ local function tabify(inspector: Inspector)
    puts(inspector.buf, inspector.newline .. rep(inspector.indent, inspector.level))
 end
 
-function Inspector:getId(v: any): string
+function Inspector:getId(v: any): integer
    local id: integer = self.ids[v]
    local ids = self.ids
    if not id then
@@ -265,7 +265,7 @@ function Inspector:getId(v: any): string
       id = (ids[tv] or 0) + 1
       ids[v], ids[tv] = id, id
    end
-   return tostring(id)
+   return id
 end
 
 function Inspector:putValue(v: any)
