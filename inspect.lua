@@ -265,7 +265,7 @@ function Inspector:getId(v)
       id = (ids[tv] or 0) + 1
       ids[v], ids[tv] = id, id
    end
-   return tostring(id)
+   return id
 end
 
 function Inspector:putValue(v)
